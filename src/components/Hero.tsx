@@ -60,7 +60,7 @@ export function Hero() {
           {/* Contact logos with embedded links — right-aligned, above address */}
           <div className="mt-6 flex flex-wrap items-center justify-end gap-3">
             <a
-              href="/resume.pdf"
+              href="/Tarek%20Rahman%20Resume.pdf"
               download="Tarek Rahman Resume.pdf"
               aria-label="Download resume (PDF)"
               className="group inline-flex items-center gap-2 border border-blueline bg-[color-mix(in_srgb,var(--blueline)_10%,var(--paper))] px-3 py-2 text-blueline transition-colors hover:bg-blueline hover:text-paper"
