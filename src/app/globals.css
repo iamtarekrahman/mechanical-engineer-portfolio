@@ -1,0 +1,187 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ---- Theme tokens ---- */
+:root,
+[data-theme="light"] {
+  --paper: #fafaf7;
+  --ink: #1a2b3c;
+  --blueline: #2e5c8a;
+  --redline: #b8492e;
+  --graphite: #6b7280;
+  --hairline: #c8cdd3;
+  --grid: #c8cdd3;
+  --grid-wash: 0.72;
+  /* Selection: warm amber, legible on both light and dark */
+  --select-bg: #f2c14e;
+  --select-fg: #1a2b3c;
+
+  --grid-size: 24px;
+}
+
+[data-theme="dark"] {
+  --paper: #0d1b2a;
+  --ink: #e6edf3;
+  --blueline: #38bdf8; /* cyan-blue accent */
+  --redline: #f4795b;
+  --graphite: #93a1b0;
+  --hairline: #24384d;
+  --grid: #164e63; /* cyan grid lines */
+  --grid-wash: 0.62;
+  --select-bg: #38bdf8;
+  --select-fg: #06121f;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+/* Smooth palette change when toggling themes */
+body,
+body * {
+  transition: background-color 0.3s ease, border-color 0.3s ease,
+    color 0.3s ease, fill 0.3s ease, stroke 0.3s ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
+
+body {
+  background-color: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-body), Georgia, serif;
+
+  /* Faint full-page grid, like graph paper */
+  background-image: linear-gradient(to right, var(--grid) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--grid) 1px, transparent 1px);
+  background-size: var(--grid-size) var(--grid-size);
+  position: relative;
+}
+
+/* Soften the grid by overlaying a translucent paper wash */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background-color: var(--paper);
+  opacity: var(--grid-wash);
+  z-index: -1;
+}
+
+/* Text selection color — visible in every theme */
+::selection {
+  background-color: var(--select-bg);
+  color: var(--select-fg);
+}
+
+/* Visible keyboard focus states */
+:focus-visible {
+  outline: 2px solid var(--blueline);
+  outline-offset: 2px;
+  border-radius: 1px;
+}
+
+a:focus-visible {
+  outline: 2px solid var(--blueline);
+  outline-offset: 3px;
+}
+
+/* Protect the profile / project imagery from casual download */
+.no-save {
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-user-drag: none;
+  -webkit-touch-callout: none;
+  pointer-events: none;
+}
+
+@layer base {
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-family: var(--font-display), Georgia, serif;
+  }
+}
+
+@layer components {
+  .hairline-border {
+    border: 1px solid var(--hairline);
+  }
+
+  .ink-border {
+    border: 1px solid var(--ink);
+  }
+
+  /* Small-caps mono label used for tags, dates, IDs */
+  .mono-label {
+    font-family: var(--font-mono), monospace;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    font-size: 0.7rem;
+  }
+
+  /* Handwritten signature, used for the ID photo name field */
+  .signature {
+    font-family: "Segoe Script", "Bradley Hand", cursive;
+    font-weight: 400;
+    letter-spacing: 0.01em;
+    line-height: 1;
+    text-transform: none;
+  }
+
+  /* Pill-shaped topic tag in the blueprint palette */
+  .tag-pill {
+    display: inline-flex;
+    align-items: center;
+    font-family: var(--font-mono), monospace;
+    font-size: 0.68rem;
+    letter-spacing: 0.03em;
+    line-height: 1;
+    padding: 0.34rem 0.6rem;
+    border: 1px solid var(--hairline);
+    border-radius: 9999px;
+    color: var(--blueline);
+    background-color: color-mix(in srgb, var(--blueline) 5%, var(--paper));
+    white-space: nowrap;
+    transition: color 0.15s ease, border-color 0.15s ease,
+      background-color 0.15s ease;
+  }
+  .tag-pill:hover {
+    color: var(--select-fg);
+    background-color: var(--select-bg);
+    border-color: var(--select-bg);
+  }
+
+  /* Text item whose color shifts on hover (skills, list entries).
+     Uses the amber selection accent, legible in light and dark. */
+  .hover-accent {
+    transition: color 0.15s ease;
+  }
+  .hover-accent:hover {
+    color: #d98a1f;
+  }
+
+  /* Spec-sheet card: subtle hover lift + border promotes to blueline */
+  .spec-card {
+    transition: transform 0.2s ease, border-color 0.2s ease,
+      box-shadow 0.2s ease;
+  }
+  .spec-card:hover {
+    transform: translateY(-4px);
+    border-color: var(--blueline);
+    box-shadow: 0 8px 20px -12px color-mix(in srgb, var(--ink) 40%, transparent);
+  }
+}

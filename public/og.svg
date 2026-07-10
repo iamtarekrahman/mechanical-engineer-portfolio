@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" width="1200" height="630">
+  <defs>
+    <pattern id="grid" width="32" height="32" patternUnits="userSpaceOnUse">
+      <path d="M32 0H0V32" fill="none" stroke="#c8cdd3" stroke-width="1"/>
+    </pattern>
+  </defs>
+
+  <!-- Paper + faint grid -->
+  <rect width="1200" height="630" fill="#fafaf7"/>
+  <rect width="1200" height="630" fill="url(#grid)" opacity="0.5"/>
+  <rect x="24" y="24" width="1152" height="582" fill="none" stroke="#1a2b3c" stroke-width="2"/>
+
+  <!-- Kicker + name -->
+  <text x="70" y="150" font-family="'IBM Plex Mono', monospace" font-size="24" letter-spacing="4" fill="#2e5c8a">SUBMITTAL / COVER SHEET</text>
+  <text x="66" y="290" font-family="Georgia, 'Times New Roman', serif" font-size="130" font-weight="700" fill="#1a2b3c">TAREK</text>
+  <text x="66" y="410" font-family="Georgia, 'Times New Roman', serif" font-size="130" font-weight="700" fill="#1a2b3c">RAHMAN</text>
+  <text x="70" y="480" font-family="'IBM Plex Mono', monospace" font-size="30" letter-spacing="6" fill="#6b7280">ASSISTANT MECHANICAL ENGINEER</text>
+
+  <!-- Title block -->
+  <g transform="translate(70,520)">
+    <rect x="0" y="0" width="420" height="70" fill="none" stroke="#1a2b3c" stroke-width="1.5"/>
+    <line x1="210" y1="0" x2="210" y2="70" stroke="#1a2b3c" stroke-width="1"/>
+    <line x1="0" y1="35" x2="420" y2="35" stroke="#1a2b3c" stroke-width="1"/>
+    <text x="12" y="22" font-family="'IBM Plex Mono', monospace" font-size="12" fill="#6b7280">DRAWN BY</text>
+    <text x="12" y="58" font-family="'IBM Plex Mono', monospace" font-size="12" fill="#6b7280">SCALE</text>
+    <text x="222" y="22" font-family="'IBM Plex Mono', monospace" font-size="12" fill="#6b7280">SHEET</text>
+    <text x="222" y="58" font-family="'IBM Plex Mono', monospace" font-size="12" fill="#6b7280">REV</text>
+    <text x="120" y="22" font-family="'IBM Plex Mono', monospace" font-size="12" fill="#1a2b3c">T. RAHMAN</text>
+    <text x="120" y="58" font-family="'IBM Plex Mono', monospace" font-size="12" fill="#1a2b3c">NTS</text>
+    <text x="300" y="22" font-family="'IBM Plex Mono', monospace" font-size="12" fill="#1a2b3c">COVER</text>
+    <text x="300" y="58" font-family="'IBM Plex Mono', monospace" font-size="12" fill="#b8492e">01</text>
+  </g>
+
+  <!-- Gear motif, right side -->
+  <g transform="translate(960,300)">
+    <path d="M0.00,-150.00 L22.63,-113.77 L57.40,-138.58 L64.45,-96.45 L106.07,-106.07 L96.45,-64.45 L138.58,-57.40 L113.77,-22.63 L150.00,0.00 L113.77,22.63 L138.58,57.40 L96.45,64.45 L106.07,106.07 L64.45,96.45 L57.40,138.58 L22.63,113.77 L0.00,150.00 L-22.63,113.77 L-57.40,138.58 L-64.45,96.45 L-106.07,106.07 L-96.45,64.45 L-138.58,57.40 L-113.77,22.63 L-150.00,0.00 L-113.77,-22.63 L-138.58,-57.40 L-96.45,-64.45 L-106.07,-106.07 L-64.45,-96.45 L-57.40,-138.58 L-22.63,-113.77 Z"
+      fill="#2e5c8a" fill-opacity="0.08" stroke="#1a2b3c" stroke-width="2.5" stroke-linejoin="round"/>
+    <circle cx="0" cy="0" r="96" fill="none" stroke="#2e5c8a" stroke-width="1.5" stroke-dasharray="6 6"/>
+    <circle cx="0" cy="0" r="34" fill="#fafaf7" stroke="#1a2b3c" stroke-width="2.5"/>
+    <circle cx="0" cy="0" r="9" fill="#1a2b3c"/>
+    <line x1="0" y1="0" x2="80" y2="0" stroke="#b8492e" stroke-width="4"/>
+    <circle cx="80" cy="0" r="8" fill="#fafaf7" stroke="#b8492e" stroke-width="3"/>
+  </g>
+</svg>
