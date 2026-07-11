@@ -92,7 +92,7 @@ export const certifications: Certification[] = [
     platform: "Coursera",
     issued: "Jun 2026",
     credentialId: "EZSSNCP2PM3U",
-    verifyUrl: "https://coursera.org/verify/EZSSNCP2PM3U",
+    verifyUrl: "https://coursera.org/verify/specialization/EZSSNCP2PM3U",
     mark: "colorado",
     tags: ["Solar Energy", "Wind Energy", "Energy Systems", "Sustainability"],
   },
