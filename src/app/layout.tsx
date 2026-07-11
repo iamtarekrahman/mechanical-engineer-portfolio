@@ -38,7 +38,7 @@ const typewriter = Special_Elite({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://tarek-rahman.vercel.app"),
+  metadataBase: new URL("https://tarekrahman.vercel.app"),
   title: "Tarek Rahman — Assistant Mechanical Engineer",
   description:
     "Portfolio of Tarek Rahman, Assistant Mechanical Engineer working on submittal review for water treatment infrastructure. Uttara, Dhaka, Bangladesh.",
@@ -54,14 +54,22 @@ export const metadata: Metadata = {
     description:
       "Submittal review, equipment compliance, and mechanical engineering. Based in Uttara, Dhaka, Bangladesh.",
     type: "website",
-    images: [{ url: "/og.svg", width: 1200, height: 630 }],
+    images: [
+      {
+        url: "/og.png",
+        width: 1200,
+        height: 630,
+        type: "image/png",
+        alt: "Tarek Rahman — Assistant Mechanical Engineer",
+      },
+    ],
   },
   twitter: {
     card: "summary_large_image",
     title: "Tarek Rahman — Assistant Mechanical Engineer",
     description:
       "Submittal review, equipment compliance, and mechanical engineering.",
-    images: ["/og.svg"],
+    images: ["/og.png"],
   },
 };
 
