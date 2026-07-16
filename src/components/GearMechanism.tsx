@@ -121,7 +121,7 @@ export function GearMechanism() {
   return (
     <div
       aria-hidden="true"
-      className="pointer-events-none fixed right-3 top-1/2 z-20 hidden -translate-y-1/2 lg:block xl:right-6"
+      className="pointer-events-none fixed left-3 top-1/2 z-20 hidden -translate-y-1/2 lg:block xl:left-6"
     >
       <motion.div
         style={reduce ? undefined : { x: spx, y: spy }}

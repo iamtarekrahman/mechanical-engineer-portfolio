@@ -1,6 +1,7 @@
 import { SectionShell } from "./SectionShell";
 import { CertCard } from "./CertCard";
 import { DrawnTitleBlock } from "./DrawnTitleBlock";
+import { AutoScroll } from "./AutoScroll";
 import { certifications } from "@/data/content";
 
 export function Certifications() {
@@ -12,13 +13,13 @@ export function Certifications() {
       sheet="CERTIFICATIONS"
       intro="Each certification treated as a certified component, with its own datasheet and verification."
     >
-      <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+      <AutoScroll className="h-scroll h-scroll-equal sm:grid sm:grid-cols-2 sm:gap-5 lg:grid-cols-3">
         {certifications.map((cert) => (
           <DrawnTitleBlock key={cert.credentialId} showDivider={false} className="h-full">
             <CertCard cert={cert} />
           </DrawnTitleBlock>
         ))}
-      </div>
+      </AutoScroll>
     </SectionShell>
   );
 }

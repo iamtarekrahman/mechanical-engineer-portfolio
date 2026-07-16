@@ -1,5 +1,6 @@
 import { SectionShell } from "./SectionShell";
 import { SITE } from "@/data/content";
+import { ContactForm } from "./ContactForm";
 import {
   ExternalLinkIcon,
   LocationIcon,
@@ -13,11 +14,13 @@ export function Contact() {
     <SectionShell
       id="contact"
       kicker="CONTACT / STAMP"
-      title="Contact"
+      title="Get in Touch"
       sheet="CONTACT"
-      intro="Direct links only — no form, no phone number."
+      intro="Have a project in mind or need engineering support? Drop a message."
     >
-      <div className="grid gap-5 sm:grid-cols-3">
+      <ContactForm />
+
+      <div className="mt-10 grid gap-5 sm:grid-cols-3">
         <div className="ink-border bg-paper p-4">
           <div className="flex items-center gap-2 text-blueline">
             <LocationIcon size={18} />

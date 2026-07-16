@@ -52,7 +52,7 @@ export function TopNav() {
       aria-label="Section navigation"
       className="sticky top-0 z-40 border-b border-hairline bg-paper/90 backdrop-blur"
     >
-      <div className="mx-auto flex max-w-5xl items-center justify-between gap-3 px-5 py-2.5 sm:px-8">
+      <div className="mx-auto flex max-w-5xl items-center justify-between gap-3 pl-5 pr-14 py-2.5 sm:px-8">
         {/* Drawing-sheet mark / home link */}
         <a
           href="#top"
@@ -105,7 +105,7 @@ export function TopNav() {
       {menuOpen ? (
         <ul
           id="mobile-nav"
-          className="grid grid-cols-2 gap-1 border-t border-hairline bg-paper px-5 py-3 sm:px-8 lg:hidden"
+          className="grid grid-cols-2 gap-1 border-t border-hairline bg-paper pl-5 pr-14 py-3 sm:px-8 lg:hidden"
         >
           {ITEMS.map((item) => (
             <li key={item.id}>

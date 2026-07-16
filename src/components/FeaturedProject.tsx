@@ -1,6 +1,7 @@
 import { SectionShell } from "./SectionShell";
 import { SheetImage } from "./SheetImage";
 import { TitleBlock } from "./TitleBlock";
+import { AutoScroll } from "./AutoScroll";
 
 export function FeaturedProject() {
   return (
@@ -21,8 +22,8 @@ export function FeaturedProject() {
           </p>
         </div>
 
-        <div className="grid gap-8 sm:grid-cols-2 sm:gap-10">
-          <figure className="ink-border bg-paper p-2">
+        <AutoScroll className="h-scroll sm:grid sm:grid-cols-2 sm:gap-10">
+          <figure className="ink-border bg-paper p-2 h-full flex flex-col">
             <div className="relative aspect-[4/3] w-full overflow-hidden border border-hairline bg-[color-mix(in_srgb,var(--blueline)_6%,var(--paper))]">
               <SheetImage
                 src="/images/tesla-turbine-cad.png"
@@ -38,7 +39,7 @@ export function FeaturedProject() {
             </figcaption>
           </figure>
 
-          <figure className="ink-border bg-paper p-2">
+          <figure className="ink-border bg-paper p-2 h-full flex flex-col">
             <div className="relative aspect-[4/3] w-full overflow-hidden border border-hairline bg-[color-mix(in_srgb,var(--blueline)_6%,var(--paper))]">
               <SheetImage
                 src="/images/tesla-turbine-setup.png"
@@ -55,7 +56,7 @@ export function FeaturedProject() {
               <span className="mono-label text-ink">IUBAT</span>
             </figcaption>
           </figure>
-        </div>
+        </AutoScroll>
 
         <p className="font-body text-[0.98rem] leading-relaxed text-ink">
           Designed, fabricated, and experimentally tested a Tesla turbine

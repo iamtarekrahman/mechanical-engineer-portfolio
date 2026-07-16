@@ -2,6 +2,7 @@ import { SectionShell } from "./SectionShell";
 import { TitleBlock } from "./TitleBlock";
 import { DrawnTitleBlock } from "./DrawnTitleBlock";
 import { Reveal } from "./Reveal";
+import { AutoScroll } from "./AutoScroll";
 import { experience } from "@/data/content";
 
 export function Experience() {
@@ -13,10 +14,10 @@ export function Experience() {
       sheet="EXPERIENCE"
       intro="Roles logged as submittal revisions — most recent revision first."
     >
-      <div className="space-y-8">
+      <AutoScroll className="h-scroll h-scroll-equal sm:space-y-8">
         {experience.map((job) => (
           <Reveal key={job.rev}>
-            <article className="ink-border bg-paper">
+            <article className="ink-border bg-paper flex flex-col">
             {/* Title-block-style card header */}
             <div className="flex flex-col gap-4 border-b border-hairline p-4 sm:flex-row sm:items-start sm:justify-between">
               <div>
@@ -72,7 +73,7 @@ export function Experience() {
           </article>
           </Reveal>
         ))}
-      </div>
+      </AutoScroll>
     </SectionShell>
   );
 }

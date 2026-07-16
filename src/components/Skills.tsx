@@ -1,5 +1,6 @@
 import { SectionShell } from "./SectionShell";
 import { Reveal } from "./Reveal";
+import { AutoScroll } from "./AutoScroll";
 import { skills } from "@/data/content";
 
 /** Item code for a BOM-style row, e.g. "AD-01". */
@@ -17,9 +18,9 @@ export function Skills() {
       sheet="SKILLS"
       intro="Capabilities itemized like a bill of materials — grouped, coded, and countable."
     >
-      <div className="grid gap-5 md:grid-cols-2">
+      <AutoScroll className="h-scroll h-scroll-equal sm:grid sm:gap-5 md:grid-cols-2">
         {skills.map((group, gi) => (
-          <Reveal key={group.group} delay={gi * 0.05}>
+          <Reveal key={group.group} delay={gi * 0.05} className="h-full">
             <div className="flex h-full flex-col bg-paper ink-border">
               {/* BOM header */}
               <div className="flex items-center justify-between border-b border-hairline px-4 py-2.5">
@@ -52,7 +53,7 @@ export function Skills() {
             </div>
           </Reveal>
         ))}
-      </div>
+      </AutoScroll>
     </SectionShell>
   );
 }

@@ -8,6 +8,7 @@ import { Skills } from "@/components/Skills";
 import { AffiliationsAwards } from "@/components/AffiliationsAwards";
 import { Contact } from "@/components/Contact";
 import { GearMechanism } from "@/components/GearMechanism";
+import { ChainMechanism } from "@/components/ChainMechanism";
 import { TopNav } from "@/components/TopNav";
 
 export default function Page() {
@@ -17,6 +18,7 @@ export default function Page() {
       <TopNav />
       <main>
         <GearMechanism />
+        <ChainMechanism />
         <Hero />
         <About />
         <Experience />

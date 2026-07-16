@@ -37,7 +37,7 @@ export function SectionShell({
       className="scroll-mt-20 border-t border-hairline py-14 sm:py-20"
       aria-labelledby={`${id}-heading`}
     >
-      <div className="mx-auto w-full max-w-5xl px-5 sm:px-8">
+      <div className="mx-auto w-full max-w-5xl pl-5 pr-14 sm:px-8">
         <div className="flex flex-col gap-6 md:flex-row md:items-start md:justify-between">
           <div className="max-w-2xl">
             <p className="mono-label text-blueline">{kicker}</p>

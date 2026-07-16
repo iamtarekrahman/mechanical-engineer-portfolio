@@ -201,6 +201,9 @@ export const affiliations: { name: string; detail: string; period?: string }[] =
     name: "Institution of Mechanical Engineers (IMechE)",
     detail: "Member",
   },
+];
+
+export const extraCurricular: { name: string; detail: string; period?: string }[] = [
   {
     name: "NARP — Nayem's Association for Research and Publication",
     detail: "Researcher",

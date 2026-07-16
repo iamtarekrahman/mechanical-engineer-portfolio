@@ -33,6 +33,12 @@
   --select-fg: #06121f;
 }
 
+html,
+body {
+  overflow-x: clip;
+  max-width: 100vw;
+}
+
 html {
   scroll-behavior: smooth;
 }
@@ -183,5 +189,90 @@ a:focus-visible {
     transform: translateY(-4px);
     border-color: var(--blueline);
     box-shadow: 0 8px 20px -12px color-mix(in srgb, var(--ink) 40%, transparent);
+  }
+
+  /* Horizontal card strip for phone view: swipe left/right across cards.
+     Bleeds ONLY to the left viewport edge — the right side must stay clear of
+     the fixed chain-mechanism rail. At >= 640px (Tailwind `sm`) the strip
+     resets to a normal block, and the section's own grid/stack classes take over. */
+  .h-scroll {
+    display: flex;
+    align-items: stretch; /* equalize card heights within the strip */
+    gap: 1rem;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    margin-inline-start: -1.25rem;
+    padding: 0.25rem 0 0.75rem 1.25rem;
+    scroll-padding-inline-start: 1.25rem;
+  }
+  .h-scroll::-webkit-scrollbar {
+    display: none;
+  }
+  .h-scroll > * {
+    flex: 0 0 calc(100% - 0.5rem);
+    scroll-snap-align: start;
+    scroll-snap-stop: always;
+  }
+  /* Equal-height cards inside the horizontal strip.
+     The strip is flex-row + align-items:stretch, so each direct child (the
+     Reveal / DrawnTitleBlock wrapper) is already stretched to the tallest
+     sibling's height. We then force height:100% down two levels so the
+     visible card element fills that stretched cell. */
+  .h-scroll-equal > * {
+    display: flex;
+    flex-direction: column;
+  }
+  .h-scroll-equal > * > :last-child {
+    flex: 1 1 auto;
+    min-height: 0;
+  }
+
+  /* Force equal height across all cards in the horizontal scroll on mobile
+     by switching to a single-row grid — grid rows inherently equalize height. */
+  @media (max-width: 639.98px) {
+    .h-scroll.h-scroll-equal {
+      display: grid;
+      grid-auto-flow: column;
+      grid-auto-columns: calc(100% - 0.5rem);
+    }
+  }
+  /* Narrow variant for strips whose card content is short (Affiliations,
+     Awards) so the cards don't extend past the visible viewport. */
+  .h-scroll-narrow {
+    /* Trailing room so the LAST card can align to scroll-padding-start under
+       mandatory snap — without this, mandatory snap forces the last card out
+       of reach and auto-scroll's scrollTo gets clamped short. */
+    padding-inline-end: 4rem;
+  }
+  .h-scroll-narrow > * {
+    flex: 0 0 calc(100% - 4rem);
+    max-width: 20rem;
+  }
+  @media (min-width: 640px) {
+    .h-scroll {
+      display: block;
+      overflow: visible;
+      margin-inline-start: 0;
+      padding: 0;
+    }
+    .h-scroll > * {
+      flex: initial;
+    }
+    .h-scroll-narrow > * {
+      flex: initial;
+      max-width: none;
+    }
+    .h-scroll-equal > * {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+    }
+    .h-scroll-equal > * > :last-child {
+      flex: 1 1 auto;
+      min-height: 0;
+      height: 100%;
+    }
   }
 }

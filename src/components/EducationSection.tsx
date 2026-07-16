@@ -1,6 +1,7 @@
 import { SectionShell } from "./SectionShell";
 import { EducationCard } from "./EducationCard";
 import { DrawnTitleBlock } from "./DrawnTitleBlock";
+import { AutoScroll } from "./AutoScroll";
 import { education } from "@/data/content";
 
 export function EducationSection() {
@@ -11,13 +12,13 @@ export function EducationSection() {
       title="Education"
       sheet="EDUCATION"
     >
-      <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+      <AutoScroll className="h-scroll h-scroll-equal sm:grid sm:grid-cols-2 sm:gap-5 lg:grid-cols-3">
         {education.map((item) => (
           <DrawnTitleBlock key={item.program} showDivider={false} className="h-full">
             <EducationCard item={item} />
           </DrawnTitleBlock>
         ))}
-      </div>
+      </AutoScroll>
     </SectionShell>
   );
 }

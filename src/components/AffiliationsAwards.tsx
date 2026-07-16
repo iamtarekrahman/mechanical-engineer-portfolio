@@ -1,6 +1,7 @@
 import { SectionShell } from "./SectionShell";
 import { Reveal } from "./Reveal";
-import { affiliations, awards } from "@/data/content";
+import { AutoScroll } from "./AutoScroll";
+import { affiliations, extraCurricular, awards } from "@/data/content";
 
 function StampIcon({ className = "" }: { className?: string }) {
   return (
@@ -52,17 +53,17 @@ export function AffiliationsAwards() {
       sheet="APPENDIX"
       intro="Memberships, activities, and recognitions on file."
     >
-      <div className="grid gap-8 lg:grid-cols-2 lg:gap-10">
+      <div className="space-y-8">
         {/* Affiliations */}
         <div>
           <h3 className="mono-label mb-4 flex items-center gap-2 text-blueline">
             <span className="h-px w-6 bg-blueline" aria-hidden="true" />
-            Affiliations & Activities
+            Affiliations
           </h3>
-          <ul className="space-y-4">
+          <AutoScroll><ul className="h-scroll h-scroll-equal sm:grid sm:grid-cols-2 sm:gap-4">
             {affiliations.map((a, i) => (
-              <Reveal key={a.name} delay={i * 0.04}>
-                <li className="flex gap-3 bg-paper ink-border p-4">
+              <Reveal key={a.name} delay={i * 0.04} className="h-full">
+                <li className="flex gap-3 bg-paper ink-border p-4 h-full">
                   <span className="mt-0.5 shrink-0 text-blueline">
                     <StampIcon />
                   </span>
@@ -82,7 +83,39 @@ export function AffiliationsAwards() {
                 </li>
               </Reveal>
             ))}
-          </ul>
+          </ul></AutoScroll>
+        </div>
+
+        {/* Extra Curricular Activities */}
+        <div>
+          <h3 className="mono-label mb-4 flex items-center gap-2 text-blueline">
+            <span className="h-px w-6 bg-blueline" aria-hidden="true" />
+            Extra Curricular Activities
+          </h3>
+          <AutoScroll><ul className="h-scroll h-scroll-equal sm:grid sm:grid-cols-2 sm:gap-4">
+            {extraCurricular.map((a, i) => (
+              <Reveal key={a.name} delay={i * 0.04} className="h-full">
+                <li className="flex gap-3 bg-paper ink-border p-4 h-full">
+                  <span className="mt-0.5 shrink-0 text-blueline">
+                    <StampIcon />
+                  </span>
+                  <div className="min-w-0">
+                    <p className="font-display text-[0.98rem] font-semibold leading-snug text-ink">
+                      {a.name}
+                    </p>
+                    <p className="mt-1 font-body text-sm text-graphite">
+                      {a.detail}
+                    </p>
+                    {a.period ? (
+                      <p className="mono-label mt-1.5 text-graphite">
+                        {a.period}
+                      </p>
+                    ) : null}
+                  </div>
+                </li>
+              </Reveal>
+            ))}
+          </ul></AutoScroll>
         </div>
 
         {/* Awards */}
@@ -91,11 +124,10 @@ export function AffiliationsAwards() {
             <span className="h-px w-6 bg-redline" aria-hidden="true" />
             Awards
           </h3>
-          <ul className="space-y-4">
+          <AutoScroll><ul className="h-scroll h-scroll-equal sm:grid sm:grid-cols-3 sm:gap-4">
             {awards.map((aw, i) => (
-              <Reveal key={aw.title} delay={i * 0.04}>
-                <li className="relative overflow-hidden bg-paper ink-border p-4">
-                  {/* Corner index like a plate callout */}
+              <Reveal key={aw.title} delay={i * 0.04} className="h-full">
+                <li className="relative overflow-hidden bg-paper ink-border p-4 h-full">
                   <span className="mono-label absolute right-3 top-3 text-hairline">
                     {String(i + 1).padStart(2, "0")}
                   </span>
@@ -118,7 +150,7 @@ export function AffiliationsAwards() {
                 </li>
               </Reveal>
             ))}
-          </ul>
+          </ul></AutoScroll>
         </div>
       </div>
     </SectionShell>

@@ -16,7 +16,7 @@ function drawingDate() {
 export function Hero() {
   return (
     <header className="relative">
-      <div className="mx-auto w-full max-w-5xl px-5 pb-16 pt-16 sm:px-8 sm:pt-24">
+      <div className="mx-auto w-full max-w-5xl pb-16 pl-5 pr-14 pt-16 sm:px-8 sm:pt-24">
         {/* Sheet border framing the hero like a drawing plate */}
         <div className="relative ink-border bg-paper px-5 py-10 sm:px-10 sm:py-14">
           {/* Corner title block */}
