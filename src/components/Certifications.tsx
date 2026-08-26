@@ -11,6 +11,7 @@ export function Certifications() {
       kicker="SPEC SHEETS"
       title="Certifications"
       sheet="CERTIFICATIONS"
+      variant="plain"
       intro="Each certification treated as a certified component, with its own datasheet and verification."
     >
       <AutoScroll className="h-scroll h-scroll-equal sm:grid sm:grid-cols-2 sm:gap-5 lg:grid-cols-3">

@@ -1,3 +1,4 @@
+import { ScanLine } from "@/components/ScanLine";
 import { Hero } from "@/components/Hero";
 import { About } from "@/components/About";
 import { Experience } from "@/components/Experience";
@@ -16,6 +17,7 @@ export default function Page() {
     <>
       <span id="top" className="sr-only" aria-hidden="true" />
       <TopNav />
+      <ScanLine />
       <main>
         <GearMechanism />
         <ChainMechanism />

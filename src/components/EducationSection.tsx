@@ -11,6 +11,7 @@ export function EducationSection() {
       kicker="SPEC SHEETS"
       title="Education"
       sheet="EDUCATION"
+      variant="plain"
     >
       <AutoScroll className="h-scroll h-scroll-equal sm:grid sm:grid-cols-2 sm:gap-5 lg:grid-cols-3">
         {education.map((item) => (

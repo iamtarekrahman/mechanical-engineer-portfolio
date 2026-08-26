@@ -1,5 +1,5 @@
 import { SectionShell } from "./SectionShell";
-import { Reveal } from "./Reveal";
+import { ClipReveal } from "./ClipReveal";
 import { AutoScroll } from "./AutoScroll";
 import { skills } from "@/data/content";
 
@@ -16,11 +16,12 @@ export function Skills() {
       kicker="BILL OF MATERIALS"
       title="Skills"
       sheet="SKILLS"
+      variant="plain"
       intro="Capabilities itemized like a bill of materials — grouped, coded, and countable."
     >
       <AutoScroll className="h-scroll h-scroll-equal sm:grid sm:gap-5 md:grid-cols-2">
         {skills.map((group, gi) => (
-          <Reveal key={group.group} delay={gi * 0.05} className="h-full">
+          <ClipReveal key={group.group} delay={gi * 0.08} className="h-full">
             <div className="flex h-full flex-col bg-paper ink-border">
               {/* BOM header */}
               <div className="flex items-center justify-between border-b border-hairline px-4 py-2.5">
@@ -51,7 +52,7 @@ export function Skills() {
                 ))}
               </ul>
             </div>
-          </Reveal>
+          </ClipReveal>
         ))}
       </AutoScroll>
     </SectionShell>

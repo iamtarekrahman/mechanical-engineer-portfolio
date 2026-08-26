@@ -14,6 +14,8 @@ type TypewriterLeadProps = {
   holdFull?: number;
   /** ms to pause when empty before retyping */
   holdEmpty?: number;
+  /** Type once and stop (default). Set true to loop type→erase→retype. */
+  loop?: boolean;
 };
 
 type Phase = "typing" | "holding" | "erasing" | "waiting";
@@ -31,6 +33,7 @@ export function TypewriterLead({
   eraseSpeed = 16,
   holdFull = 8000,
   holdEmpty = 500,
+  loop = false,
 }: TypewriterLeadProps) {
   const reduce = useReducedMotion();
   const ref = useRef<HTMLParagraphElement>(null);
@@ -46,9 +49,11 @@ export function TypewriterLead({
     if (phase === "typing") {
       if (count < text.length) {
         timer = window.setTimeout(() => setCount((c) => c + 1), speed);
-      } else {
+      } else if (loop) {
         timer = window.setTimeout(() => setPhase("holding"), holdFull);
       }
+      // Not looping: typing is complete — leave the full sentence in place
+      // and let the caret keep blinking. No erase, no resize.
     } else if (phase === "holding") {
       timer = window.setTimeout(() => setPhase("erasing"), 0);
     } else if (phase === "erasing") {
@@ -72,6 +77,7 @@ export function TypewriterLead({
     eraseSpeed,
     holdFull,
     holdEmpty,
+    loop,
   ]);
 
   const shown = reduce ? text : text.slice(0, count);
@@ -82,7 +88,7 @@ export function TypewriterLead({
       {!reduce ? (
         <span
           aria-hidden="true"
-          className="ml-0.5 inline-block w-[0.55ch] animate-caret bg-[#e11d1d] align-[-0.1em]"
+          className="ml-0.5 inline-block w-[0.55ch] animate-caret bg-redline align-[-0.1em]"
           style={{ height: "1.05em" }}
         />
       ) : null}

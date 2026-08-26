@@ -24,6 +24,17 @@ function applyTheme(mode: Mode) {
 }
 
 /**
+ * Briefly enables the palette transition (see `.theme-transition` in
+ * globals.css) so a theme switch cross-fades, then removes it so normal
+ * hovers and interactions aren't globally transitioned.
+ */
+function flashThemeTransition() {
+  const root = document.documentElement;
+  root.classList.add("theme-transition");
+  window.setTimeout(() => root.classList.remove("theme-transition"), 320);
+}
+
+/**
  * Sliding Sun / Moon theme switch. Toggles between light and dark; the initial
  * state resolves from the saved choice or the OS preference (applied pre-paint
  * by the layout's inline script, so there's no flash). Choosing a side stores
@@ -44,6 +55,7 @@ export function ThemeToggle() {
     if (mode !== "system") return;
     const mq = window.matchMedia("(prefers-color-scheme: dark)");
     const onChange = () => {
+      flashThemeTransition();
       applyTheme("system");
       // force re-render so the knob reflects the new system state
       setMode("system");
@@ -56,6 +68,7 @@ export function ThemeToggle() {
 
   function toggle() {
     const next: Mode = dark ? "light" : "dark";
+    flashThemeTransition();
     setMode(next);
     localStorage.setItem("theme", next);
     applyTheme(next);

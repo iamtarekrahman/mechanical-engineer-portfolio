@@ -51,6 +51,7 @@ export function AffiliationsAwards() {
       kicker="APPENDIX"
       title="Affiliations & Awards"
       sheet="APPENDIX"
+      variant="plain"
       intro="Memberships, activities, and recognitions on file."
     >
       <div className="space-y-8">

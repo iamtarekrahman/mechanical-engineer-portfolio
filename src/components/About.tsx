@@ -1,5 +1,6 @@
 import { SectionShell } from "./SectionShell";
 import { SheetImage } from "./SheetImage";
+import { ColorRevealImage } from "./ColorRevealImage";
 
 export function About() {
   return (
@@ -9,6 +10,7 @@ export function About() {
       title="About"
       sheet="ABOUT"
       rev="01"
+      variant="plain"
     >
       <div className="grid gap-8 md:grid-cols-[minmax(0,1fr)_16rem] md:gap-10">
         <div className="order-2 md:order-1">
@@ -42,12 +44,11 @@ export function About() {
         <figure className="order-1 md:order-2">
           <div className="ink-border bg-white p-2">
             <div className="relative aspect-[4/5] w-full overflow-hidden border border-hairline bg-white">
-              <SheetImage
-                src="/images/profile.png"
+              <ColorRevealImage
+                src="/images/profile-c.jpg"
                 alt="Tarek Rahman"
-                placeholderLabel="ID PHOTO"
-                whiteBackground
-                protect
+                spotlightRadius={120}
+                className="object-cover"
               />
             </div>
             <figcaption className="mt-2 flex items-center justify-between gap-2 px-1 pb-0.5">

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useScroll, useMotionValueEvent } from "framer-motion";
 import { ThemeToggle } from "./ThemeToggle";
 
 type NavItem = { id: string; label: string };
@@ -25,6 +26,11 @@ const ITEMS: NavItem[] = [
 export function TopNav() {
   const [active, setActive] = useState<string>("");
   const [menuOpen, setMenuOpen] = useState(false);
+  const [scanPct, setScanPct] = useState(0);
+  const { scrollYProgress } = useScroll();
+  useMotionValueEvent(scrollYProgress, "change", (v) =>
+    setScanPct(Math.round(v * 100)),
+  );
 
   useEffect(() => {
     const sections = ITEMS.map((i) => document.getElementById(i.id)).filter(
@@ -60,6 +66,10 @@ export function TopNav() {
         >
           HOME <span className="text-graphite">/ DWG</span>
         </a>
+
+        <span className="mono-label hidden text-blueline/60 sm:inline">
+          SCAN: {String(scanPct).padStart(3, "0")}%
+        </span>
 
         {/* Desktop links */}
         <ul className="hidden flex-1 items-center justify-center gap-0.5 lg:flex">

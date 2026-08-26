@@ -16,6 +16,7 @@ export function Contact() {
       kicker="CONTACT / STAMP"
       title="Get in Touch"
       sheet="CONTACT"
+      variant="plain"
       intro="Have a project in mind or need engineering support? Drop a message."
     >
       <ContactForm />
