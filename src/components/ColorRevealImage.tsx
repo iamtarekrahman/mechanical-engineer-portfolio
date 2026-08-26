@@ -20,7 +20,7 @@ export function ColorRevealImage({
   src,
   alt,
   spotlightRadius = 120,
-  fadeDuration = 5000, // 5 seconds
+  fadeDuration = 10000, // 10 seconds
   className = "",
 }: ColorRevealImageProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -178,6 +178,28 @@ export function ColorRevealImage({
     }
   };
 
+  const handleTouchMove = (e: React.TouchEvent<HTMLCanvasElement>) => {
+    e.preventDefault(); // Prevent scrolling while painting
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    const rect = canvas.getBoundingClientRect();
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+
+    const touch = e.touches[0];
+    const x = (touch.clientX - rect.left) * scaleX;
+    const y = (touch.clientY - rect.top) * scaleY;
+
+    const now = Date.now();
+
+    // Add paint point (throttle to avoid too many points)
+    if (now - lastPaintTimeRef.current > 16) { // ~60fps
+      paintPointsRef.current.push({ x, y, timestamp: now });
+      lastPaintTimeRef.current = now;
+    }
+  };
+
   const handleMouseLeave = () => {
     // Don't clear points - let them fade naturally
   };
@@ -187,9 +209,12 @@ export function ColorRevealImage({
       ref={canvasRef}
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
+      onTouchStart={handleTouchMove}
+      onTouchMove={handleTouchMove}
       className={`w-full h-full ${className}`}
       style={{
-        cursor: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none'%3E%3Cdefs%3E%3ClinearGradient id='brush' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' style='stop-color:%23FF6B6B;stop-opacity:1'/%3E%3Cstop offset='33%25' style='stop-color:%23FFD93D;stop-opacity:1'/%3E%3Cstop offset='66%25' style='stop-color:%236BCB77;stop-opacity:1'/%3E%3Cstop offset='100%25' style='stop-color:%234D96FF;stop-opacity:1'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cpath d='M9.06 11.9l8.07-8.06a1.5 1.5 0 0 1 2.13 0l.92.92a1.5 1.5 0 0 1 0 2.13L12.11 15' stroke='url(%23brush)' stroke-width='2.5' fill='none'/%3E%3Cpath d='M9 12l-7 7v3h3l7-7' fill='url(%23brush)' stroke='url(%23brush)' stroke-width='1.5'/%3E%3C/svg%3E") 0 24, crosshair`
+        cursor: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none'%3E%3Cdefs%3E%3ClinearGradient id='brush' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' style='stop-color:%23FF6B6B;stop-opacity:1'/%3E%3Cstop offset='33%25' style='stop-color:%23FFD93D;stop-opacity:1'/%3E%3Cstop offset='66%25' style='stop-color:%236BCB77;stop-opacity:1'/%3E%3Cstop offset='100%25' style='stop-color:%234D96FF;stop-opacity:1'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cpath d='M9.06 11.9l8.07-8.06a1.5 1.5 0 0 1 2.13 0l.92.92a1.5 1.5 0 0 1 0 2.13L12.11 15' stroke='url(%23brush)' stroke-width='2.5' fill='none'/%3E%3Cpath d='M9 12l-7 7v3h3l7-7' fill='url(%23brush)' stroke='url(%23brush)' stroke-width='1.5'/%3E%3C/svg%3E") 0 24, crosshair`,
+        touchAction: 'none' // Prevent scrolling on touch
       }}
       aria-label={alt}
     />
