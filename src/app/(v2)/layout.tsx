@@ -1,11 +1,6 @@
 import type { Metadata, Viewport } from "next";
-import {
-  Fraunces,
-  Newsreader,
-  IBM_Plex_Mono,
-  Special_Elite,
-} from "next/font/google";
-import "./globals.css";
+import { Fraunces, Inter, IBM_Plex_Mono } from "next/font/google";
+import "../globals.css";
 
 const display = Fraunces({
   subsets: ["latin"],
@@ -15,10 +10,9 @@ const display = Fraunces({
   display: "swap",
 });
 
-const body = Newsreader({
+const body = Inter({
   subsets: ["latin"],
-  weight: ["300", "400", "500", "600"],
-  style: ["normal", "italic"],
+  weight: ["400", "500", "600"],
   variable: "--font-body",
   display: "swap",
 });
@@ -30,13 +24,6 @@ const mono = IBM_Plex_Mono({
   display: "swap",
 });
 
-const typewriter = Special_Elite({
-  subsets: ["latin"],
-  weight: ["400"],
-  variable: "--font-typewriter",
-  display: "swap",
-});
-
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
@@ -45,6 +32,7 @@ export const viewport: Viewport = {
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://tarekrahman.vercel.app"),
+  alternates: { canonical: "/" },
   title: "Tarek Rahman — Assistant Mechanical Engineer",
   description:
     "Portfolio of Tarek Rahman, Assistant Mechanical Engineer working on submittal review for water treatment infrastructure. Uttara, Dhaka, Bangladesh.",
@@ -56,6 +44,7 @@ export const metadata: Metadata = {
     apple: [{ url: "/favicon.svg" }],
   },
   openGraph: {
+    url: "/",
     title: "Tarek Rahman — Assistant Mechanical Engineer",
     description:
       "Submittal review, equipment compliance, and mechanical engineering. Based in Uttara, Dhaka, Bangladesh.",
@@ -85,13 +74,14 @@ export const metadata: Metadata = {
  */
 const themeScript = `
 (function () {
+  var mode = 'system';
   try {
     var stored = localStorage.getItem('theme');
-    var mode = stored || 'system';
-    var dark = mode === 'dark' ||
-      (mode === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
-    document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
+    mode = stored === 'light' || stored === 'dark' ? stored : 'system';
   } catch (e) {}
+  var dark = mode === 'dark' ||
+    (mode === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+  document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
 })();
 `;
 
@@ -104,7 +94,7 @@ export default function RootLayout({
     <html
       lang="en"
       suppressHydrationWarning
-      className={`${display.variable} ${body.variable} ${mono.variable} ${typewriter.variable}`}
+      className={`${display.variable} ${body.variable} ${mono.variable}`}
     >
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />

@@ -1,222 +1,384 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import Image from "next/image";
+import { useEffect, useId, useRef, useState } from "react";
+import "./color-reveal.css";
 
 interface ColorRevealImageProps {
   src: string;
   alt: string;
+  /** Brush radius in CSS pixels, independent of source resolution. */
   spotlightRadius?: number;
-  fadeDuration?: number; // in milliseconds
+  /** Total lifetime of a stroke, including its final fade. */
+  fadeDuration?: number;
   className?: string;
 }
 
-interface PaintPoint {
-  x: number;
-  y: number;
-  timestamp: number;
-}
+type PaintPoint = { x: number; y: number; timestamp: number };
+type RevealEngine = {
+  paint: (clientX: number, clientY: number) => void;
+  revealAll: () => void;
+};
 
+/**
+ * The original image remains untouched underneath a cached monochrome layer.
+ * Painting erases that layer; it never filters or tints the original colors.
+ */
 export function ColorRevealImage({
   src,
   alt,
-  spotlightRadius = 120,
-  fadeDuration = 10000, // 10 seconds
+  spotlightRadius = 24,
+  fadeDuration = 10000,
   className = "",
 }: ColorRevealImageProps) {
+  const hostRef = useRef<HTMLDivElement>(null);
+  const imageRef = useRef<HTMLImageElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [isLoaded, setIsLoaded] = useState(false);
-  const paintPointsRef = useRef<PaintPoint[]>([]);
-  const imageRef = useRef<HTMLImageElement | null>(null);
-  const animationFrameRef = useRef<number>();
-  const lastPaintTimeRef = useRef<number>(0);
+  const engineRef = useRef<RevealEngine | null>(null);
+  const descriptionId = useId();
+  const [ready, setReady] = useState(false);
+  const [status, setStatus] = useState("");
 
-  // Load images
   useEffect(() => {
-    const img = new Image();
-    img.crossOrigin = "anonymous";
-    img.src = src;
-
-    img.onload = () => {
-      imageRef.current = img;
-      setIsLoaded(true);
-    };
-
-    return () => {
-      if (animationFrameRef.current) {
-        cancelAnimationFrame(animationFrameRef.current);
-      }
-    };
-  }, [src]);
-
-  // Animation loop
-  useEffect(() => {
-    if (!isLoaded || !canvasRef.current || !imageRef.current) return;
-
+    const host = hostRef.current;
+    const image = imageRef.current;
     const canvas = canvasRef.current;
-    const ctx = canvas.getContext("2d", { willReadFrequently: false });
-    if (!ctx) return;
+    if (!host || !image || !canvas) return;
+    setReady(false);
+    setStatus("");
 
-    const img = imageRef.current;
+    // These three small buffers are allocated once, never inside a paint frame.
+    const gray = document.createElement("canvas");
+    const mask = document.createElement("canvas");
+    const brush = document.createElement("canvas");
+    const context = canvas.getContext("2d");
+    const grayContext = gray.getContext("2d", { willReadFrequently: true });
+    const maskContext = mask.getContext("2d");
+    const brushContext = brush.getContext("2d");
+    if (!context || !grayContext || !maskContext || !brushContext) return;
+    const ctx: CanvasRenderingContext2D = context;
+    const grayCtx: CanvasRenderingContext2D = grayContext;
+    const maskCtx: CanvasRenderingContext2D = maskContext;
+    const brushCtx: CanvasRenderingContext2D = brushContext;
+    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const lifetime = Math.max(1000, fadeDuration);
+    const holdTime = lifetime * 0.75;
+    const radius = Math.max(12, spotlightRadius);
+    let width = 0,
+      height = 0,
+      ratio = 1;
+    let initialized = false,
+      disposed = false,
+      visible = true;
+    let frame = 0,
+      timer = 0;
+    let points: PaintPoint[] = [];
+    let fullReveal: number | null = null;
 
-    // Set canvas size to match image
-    canvas.width = img.width;
-    canvas.height = img.height;
+    function stop() {
+      cancelAnimationFrame(frame);
+      clearTimeout(timer);
+      frame = 0;
+      timer = 0;
+    }
 
-    const animate = () => {
-      const now = Date.now();
+    function opacity(timestamp: number, now: number) {
+      const age = now - timestamp;
+      if (age >= lifetime) return 0;
+      if (reduced.matches || age <= holdTime) return 1;
+      const progress = (age - holdTime) / (lifetime - holdTime);
+      return 1 - progress * progress * (3 - 2 * progress);
+    }
 
-      // Remove points older than fadeDuration
-      paintPointsRef.current = paintPointsRef.current.filter(
-        (point) => now - point.timestamp < fadeDuration
-      );
+    function render(now: number) {
+      points = points.filter((point) => now - point.timestamp < lifetime);
+      if (fullReveal !== null && now - fullReveal >= lifetime) {
+        fullReveal = null;
+        setStatus("");
+      }
+      maskCtx.clearRect(0, 0, mask.width, mask.height);
+      maskCtx.globalCompositeOperation = "source-over";
+      if (fullReveal !== null) {
+        maskCtx.globalAlpha = opacity(fullReveal, now);
+        maskCtx.fillStyle = "#fff";
+        maskCtx.fillRect(0, 0, mask.width, mask.height);
+      }
+      for (const point of points) {
+        maskCtx.globalAlpha = opacity(point.timestamp, now);
+        maskCtx.drawImage(
+          brush,
+          point.x * mask.width - brush.width / 2,
+          point.y * mask.height - brush.height / 2,
+        );
+      }
+      maskCtx.globalAlpha = 1;
+      ctx.globalCompositeOperation = "source-over";
+      ctx.clearRect(0, 0, canvas!.width, canvas!.height);
+      ctx.drawImage(gray, 0, 0);
+      ctx.globalCompositeOperation = "destination-out";
+      ctx.drawImage(mask, 0, 0);
+      ctx.globalCompositeOperation = "source-over";
+    }
 
-      // Clear canvas
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
+    function schedule() {
+      stop();
+      if (!initialized || disposed || !visible || document.hidden) return;
+      const now = performance.now();
+      render(now);
+      const times = points.map((point) => point.timestamp);
+      if (fullReveal !== null) times.push(fullReveal);
+      if (!times.length) return;
+      const nextChange =
+        Math.min(...times) + (reduced.matches ? lifetime : holdTime);
+      if (now < nextChange) {
+        // While strokes hold their original color, no animation frames are needed.
+        timer = window.setTimeout(schedule, Math.max(1, nextChange - now));
+      } else {
+        frame = requestAnimationFrame(schedule);
+      }
+    }
 
-      // Draw grayscale base
-      ctx.filter = "grayscale(100%)";
-      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-      ctx.filter = "none";
-
-      // Draw color spotlights for each paint point
-      if (paintPointsRef.current.length > 0) {
-        // Draw color image first
-        ctx.save();
-        ctx.globalCompositeOperation = "source-over";
-
-        // Create a mask canvas for all spotlights
-        const maskCanvas = document.createElement('canvas');
-        maskCanvas.width = canvas.width;
-        maskCanvas.height = canvas.height;
-        const maskCtx = maskCanvas.getContext('2d');
-
-        if (maskCtx) {
-          // Draw all spotlights on mask
-          paintPointsRef.current.forEach((point) => {
-            const age = now - point.timestamp;
-            const fadeProgress = age / fadeDuration; // 0 to 1
-            const opacity = 1 - fadeProgress; // 1 to 0
-
-            // Create radial gradient for soft edge
-            const gradient = maskCtx.createRadialGradient(
-              point.x,
-              point.y,
-              0,
-              point.x,
-              point.y,
-              spotlightRadius
-            );
-            gradient.addColorStop(0, `rgba(255, 255, 255, ${opacity})`);
-            gradient.addColorStop(0.7, `rgba(255, 255, 255, ${opacity * 0.5})`);
-            gradient.addColorStop(1, "rgba(255, 255, 255, 0)");
-
-            maskCtx.globalCompositeOperation = "lighter";
-            maskCtx.beginPath();
-            maskCtx.arc(point.x, point.y, spotlightRadius, 0, Math.PI * 2);
-            maskCtx.fillStyle = gradient;
-            maskCtx.fill();
-          });
-
-          // Use mask to draw color image
-          ctx.save();
-          ctx.globalCompositeOperation = "source-over";
-
-          // Draw the mask as alpha
-          ctx.globalCompositeOperation = "destination-over";
-
-          // Create a temporary canvas for the color layer
-          const colorCanvas = document.createElement('canvas');
-          colorCanvas.width = canvas.width;
-          colorCanvas.height = canvas.height;
-          const colorCtx = colorCanvas.getContext('2d');
-
-          if (colorCtx) {
-            colorCtx.drawImage(img, 0, 0, canvas.width, canvas.height);
-            colorCtx.globalCompositeOperation = "destination-in";
-            colorCtx.drawImage(maskCanvas, 0, 0);
-
-            // Draw the masked color layer on main canvas
-            ctx.globalCompositeOperation = "source-over";
-            ctx.drawImage(colorCanvas, 0, 0);
-          }
-
-          ctx.restore();
+    function prepare() {
+      if (
+        disposed ||
+        !image!.complete ||
+        !image!.naturalWidth ||
+        !width ||
+        !height
+      )
+        return;
+      try {
+        ratio = Math.min(window.devicePixelRatio || 1, 2);
+        const pixelWidth = Math.max(1, Math.round(width * ratio));
+        const pixelHeight = Math.max(1, Math.round(height * ratio));
+        canvas!.width = gray.width = mask.width = pixelWidth;
+        canvas!.height = gray.height = mask.height = pixelHeight;
+        // Match object-fit: cover and object-position: center on the real image.
+        const scale = Math.max(
+          width / image!.naturalWidth,
+          height / image!.naturalHeight,
+        );
+        const sourceWidth = width / scale,
+          sourceHeight = height / scale;
+        grayCtx.drawImage(
+          image!,
+          (image!.naturalWidth - sourceWidth) / 2,
+          (image!.naturalHeight - sourceHeight) / 2,
+          sourceWidth,
+          sourceHeight,
+          0,
+          0,
+          pixelWidth,
+          pixelHeight,
+        );
+        const pixels = grayCtx.getImageData(0, 0, pixelWidth, pixelHeight);
+        for (let i = 0; i < pixels.data.length; i += 4) {
+          const luminance = Math.round(
+            pixels.data[i] * 0.2126 +
+              pixels.data[i + 1] * 0.7152 +
+              pixels.data[i + 2] * 0.0722,
+          );
+          pixels.data[i] = pixels.data[i + 1] = pixels.data[i + 2] = luminance;
         }
-
-        ctx.restore();
+        grayCtx.putImageData(pixels, 0, 0);
+        brush.width = brush.height = Math.max(1, Math.ceil(radius * ratio * 2));
+        const center = brush.width / 2;
+        const gradient = brushCtx.createRadialGradient(
+          center,
+          center,
+          center * 0.65,
+          center,
+          center,
+          center,
+        );
+        gradient.addColorStop(0, "#fff");
+        gradient.addColorStop(1, "transparent");
+        brushCtx.fillStyle = gradient;
+        brushCtx.fillRect(0, 0, brush.width, brush.height);
+        initialized = true;
+        setReady(true);
+        schedule();
+      } catch {
+        // A blocked/tainted canvas leaves the actual, unfiltered image in place.
+        initialized = false;
+        setReady(false);
+        stop();
       }
+    }
 
-      animationFrameRef.current = requestAnimationFrame(animate);
+    function position(clientX: number, clientY: number) {
+      // Include ancestor rotation (the portrait frame is slightly tilted), so
+      // the brush stays under the pointer instead of using an axis-aligned box.
+      let matrix = new DOMMatrix();
+      let ancestor: Element | null = host;
+      while (ancestor) {
+        const transform = getComputedStyle(ancestor).transform;
+        if (transform !== "none")
+          matrix = new DOMMatrix(transform).multiply(matrix);
+        ancestor = ancestor.parentElement;
+      }
+      const corners = [
+        new DOMPoint(0, 0),
+        new DOMPoint(width, 0),
+        new DOMPoint(0, height),
+        new DOMPoint(width, height),
+      ].map((point) => point.matrixTransform(matrix));
+      const rect = host!.getBoundingClientRect();
+      const originX = rect.left - Math.min(...corners.map((point) => point.x));
+      const originY = rect.top - Math.min(...corners.map((point) => point.y));
+      const local = new DOMPoint(
+        clientX - originX,
+        clientY - originY,
+      ).matrixTransform(matrix.inverse());
+      return {
+        x: Math.max(0, Math.min(1, local.x / width)),
+        y: Math.max(0, Math.min(1, local.y / height)),
+      };
+    }
+
+    engineRef.current = {
+      paint(clientX, clientY) {
+        if (!initialized) return;
+        const point = position(clientX, clientY);
+        const now = performance.now();
+        const previous = points[points.length - 1];
+        const distance = previous
+          ? Math.hypot(
+              (point.x - previous.x) * width,
+              (point.y - previous.y) * height,
+            )
+          : Infinity;
+        if (
+          previous &&
+          distance < radius * 0.15 &&
+          now - previous.timestamp < 50
+        )
+          return;
+        if (
+          previous &&
+          now - previous.timestamp < 100 &&
+          distance > radius * 0.3
+        ) {
+          const steps = Math.min(12, Math.ceil(distance / (radius * 0.3)));
+          for (let step = 1; step < steps; step++) {
+            points.push({
+              x: previous.x + ((point.x - previous.x) * step) / steps,
+              y: previous.y + ((point.y - previous.y) * step) / steps,
+              timestamp: now,
+            });
+          }
+        }
+        points.push({ ...point, timestamp: now });
+        if (points.length > 256) points.splice(0, points.length - 256);
+        schedule();
+      },
+      revealAll() {
+        if (!initialized) return;
+        fullReveal = performance.now();
+        setStatus(
+          `Original colors revealed. They return to black and white in about ${Math.round(lifetime / 1000)} seconds.`,
+        );
+        schedule();
+      },
     };
 
-    animate();
+    const resize = new ResizeObserver(([entry]) => {
+      if (
+        !entry ||
+        (width === entry.contentRect.width &&
+          height === entry.contentRect.height)
+      )
+        return;
+      width = entry.contentRect.width;
+      height = entry.contentRect.height;
+      prepare();
+    });
+    resize.observe(host);
+    const intersection = new IntersectionObserver(([entry]) => {
+      visible = entry?.isIntersecting ?? false;
+      schedule();
+    });
+    intersection.observe(host);
+    const onError = () => {
+      initialized = false;
+      setReady(false);
+      stop();
+    };
+    image.addEventListener("load", prepare);
+    image.addEventListener("error", onError);
+    document.addEventListener("visibilitychange", schedule);
+    reduced.addEventListener("change", schedule);
+    // Cached images may finish before effects subscribe to the load event.
+    const computed = getComputedStyle(host);
+    width = parseFloat(computed.width);
+    height = parseFloat(computed.height);
+    if (image.complete && image.naturalWidth) prepare();
 
     return () => {
-      if (animationFrameRef.current) {
-        cancelAnimationFrame(animationFrameRef.current);
-      }
+      disposed = true;
+      stop();
+      engineRef.current = null;
+      image.removeEventListener("load", prepare);
+      image.removeEventListener("error", onError);
+      resize.disconnect();
+      intersection.disconnect();
+      document.removeEventListener("visibilitychange", schedule);
+      reduced.removeEventListener("change", schedule);
     };
-  }, [isLoaded, spotlightRadius, fadeDuration]);
-
-  const handleMouseMove = (e: React.MouseEvent<HTMLCanvasElement>) => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-
-    const rect = canvas.getBoundingClientRect();
-    const scaleX = canvas.width / rect.width;
-    const scaleY = canvas.height / rect.height;
-
-    const x = (e.clientX - rect.left) * scaleX;
-    const y = (e.clientY - rect.top) * scaleY;
-
-    const now = Date.now();
-
-    // Add paint point (throttle to avoid too many points)
-    if (now - lastPaintTimeRef.current > 16) { // ~60fps
-      paintPointsRef.current.push({ x, y, timestamp: now });
-      lastPaintTimeRef.current = now;
-    }
-  };
-
-  const handleTouchMove = (e: React.TouchEvent<HTMLCanvasElement>) => {
-    e.preventDefault(); // Prevent scrolling while painting
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-
-    const rect = canvas.getBoundingClientRect();
-    const scaleX = canvas.width / rect.width;
-    const scaleY = canvas.height / rect.height;
-
-    const touch = e.touches[0];
-    const x = (touch.clientX - rect.left) * scaleX;
-    const y = (touch.clientY - rect.top) * scaleY;
-
-    const now = Date.now();
-
-    // Add paint point (throttle to avoid too many points)
-    if (now - lastPaintTimeRef.current > 16) { // ~60fps
-      paintPointsRef.current.push({ x, y, timestamp: now });
-      lastPaintTimeRef.current = now;
-    }
-  };
-
-  const handleMouseLeave = () => {
-    // Don't clear points - let them fade naturally
-  };
+  }, [src, spotlightRadius, fadeDuration]);
 
   return (
-    <canvas
-      ref={canvasRef}
-      onMouseMove={handleMouseMove}
-      onMouseLeave={handleMouseLeave}
-      onTouchStart={handleTouchMove}
-      onTouchMove={handleTouchMove}
-      className={`w-full h-full ${className}`}
-      style={{
-        cursor: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none'%3E%3Cdefs%3E%3ClinearGradient id='brush' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' style='stop-color:%23FF6B6B;stop-opacity:1'/%3E%3Cstop offset='33%25' style='stop-color:%23FFD93D;stop-opacity:1'/%3E%3Cstop offset='66%25' style='stop-color:%236BCB77;stop-opacity:1'/%3E%3Cstop offset='100%25' style='stop-color:%234D96FF;stop-opacity:1'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cpath d='M9.06 11.9l8.07-8.06a1.5 1.5 0 0 1 2.13 0l.92.92a1.5 1.5 0 0 1 0 2.13L12.11 15' stroke='url(%23brush)' stroke-width='2.5' fill='none'/%3E%3Cpath d='M9 12l-7 7v3h3l7-7' fill='url(%23brush)' stroke='url(%23brush)' stroke-width='1.5'/%3E%3C/svg%3E") 0 24, crosshair`,
-        touchAction: 'none' // Prevent scrolling on touch
-      }}
-      aria-label={alt}
-    />
+    <div className="color-reveal" data-ready={ready}>
+      <div
+        ref={hostRef}
+        className={`color-reveal__viewport ${className}`}
+        onPointerDown={(event) => {
+          if (!ready) return;
+          event.preventDefault();
+          event.currentTarget.setPointerCapture(event.pointerId);
+          engineRef.current?.paint(event.clientX, event.clientY);
+        }}
+        onPointerMove={(event) => {
+          if (event.pointerType === "mouse" || event.buttons !== 0)
+            engineRef.current?.paint(event.clientX, event.clientY);
+        }}
+      >
+        <Image
+          ref={imageRef}
+          src={src}
+          alt={alt}
+          fill
+          unoptimized
+          sizes="(max-width: 640px) 78vw, 300px"
+          draggable={false}
+          className="color-reveal__original"
+        />
+        <canvas
+          ref={canvasRef}
+          className="color-reveal__monochrome"
+          aria-hidden="true"
+        />
+      </div>
+      <div className="color-reveal__controls">
+        <span aria-hidden="true">Draw to reveal color</span>
+        <button
+          type="button"
+          disabled={!ready}
+          onClick={() => engineRef.current?.revealAll()}
+          aria-label="Reveal original photo colors"
+          aria-describedby={descriptionId}
+        >
+          Reveal all <span aria-hidden="true">↗</span>
+        </button>
+      </div>
+      <p className="sr-only" id={descriptionId}>
+        Draw over the photo with a pointer or touch, or use this button to
+        reveal all its original colors. Color fades back to black and white
+        after about {Math.round(fadeDuration / 1000)} seconds.
+      </p>
+      <span className="sr-only" role="status">
+        {status}
+      </span>
+    </div>
   );
 }

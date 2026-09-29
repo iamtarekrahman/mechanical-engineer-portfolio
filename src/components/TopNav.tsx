@@ -1,138 +1,292 @@
-"use client";
+﻿"use client";
 
-import { useEffect, useState } from "react";
-import { useScroll, useMotionValueEvent } from "framer-motion";
+import {
+  useEffect,
+  useRef,
+  useState,
+  type MouseEvent,
+  type RefObject,
+} from "react";
 import { ThemeToggle } from "./ThemeToggle";
+import styles from "./TopNav.module.css";
 
-type NavItem = { id: string; label: string };
-
-const ITEMS: NavItem[] = [
-  { id: "about", label: "About" },
-  { id: "experience", label: "Experience" },
+const ITEMS = [
   { id: "project", label: "Project" },
-  { id: "certifications", label: "Certificates" },
-  { id: "education", label: "Education" },
-  { id: "skills", label: "Skills" },
-  { id: "affiliations", label: "Awards" },
+  { id: "experience", label: "Work Experience" },
+  { id: "certifications", label: "Credentials" },
+  { id: "about", label: "About" },
   { id: "contact", label: "Contact" },
 ];
 
-/**
- * Slim sticky top navigation with jump links to every major section. Uses the
- * browser's native anchor scrolling (globals.css sets scroll-behavior +
- * scroll-margin, and respects prefers-reduced-motion). Highlights the section
- * currently in view. Collapses to a scrollable strip on narrow screens.
- */
-export function TopNav() {
-  const [active, setActive] = useState<string>("");
-  const [menuOpen, setMenuOpen] = useState(false);
-  const [scanPct, setScanPct] = useState(0);
-  const { scrollYProgress } = useScroll();
-  useMotionValueEvent(scrollYProgress, "change", (v) =>
-    setScanPct(Math.round(v * 100)),
-  );
+const EMPTY_HIGHLIGHT = {
+  left: 0,
+  top: 0,
+  width: 0,
+  height: 0,
+  visible: false,
+  animate: false,
+};
+
+function useNavHighlight(
+  containerRef: RefObject<HTMLElement>,
+  active: string,
+  enabled = true,
+) {
+  const [highlight, setHighlight] = useState(EMPTY_HIGHLIGHT);
 
   useEffect(() => {
-    const sections = ITEMS.map((i) => document.getElementById(i.id)).filter(
-      (el): el is HTMLElement => Boolean(el),
-    );
-    if (sections.length === 0) return;
+    const container = containerRef.current;
+    if (!container) return;
 
-    const observer = new IntersectionObserver(
-      (entries) => {
-        // Pick the entry nearest the top that is intersecting.
-        const visible = entries
-          .filter((e) => e.isIntersecting)
-          .sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top);
-        if (visible[0]?.target.id) setActive(visible[0].target.id);
-      },
-      { rootMargin: "-45% 0px -50% 0px", threshold: 0 },
-    );
+    const measure = () => {
+      const face = container.querySelector<HTMLElement>(
+        "[aria-current] [data-nav-face]",
+      );
+      if (!enabled || !container.offsetWidth || !face) {
+        setHighlight((previous) =>
+          previous.visible ? EMPTY_HIGHLIGHT : previous,
+        );
+        return;
+      }
+      const bounds = face.getBoundingClientRect();
+      const parent = container.getBoundingClientRect();
+      const next = {
+        left:
+          bounds.left -
+          parent.left -
+          container.clientLeft +
+          container.scrollLeft,
+        top:
+          bounds.top - parent.top - container.clientTop + container.scrollTop,
+        width: bounds.width,
+        height: bounds.height,
+      };
+      setHighlight((previous) => {
+        if (
+          previous.visible &&
+          Object.entries(next).every(
+            ([key, value]) => previous[key as keyof typeof next] === value,
+          )
+        )
+          return previous;
+        return { ...next, visible: true, animate: previous.visible };
+      });
+    };
 
-    sections.forEach((s) => observer.observe(s));
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(container);
+    container
+      .querySelectorAll("[data-nav-face]")
+      .forEach((face) => observer.observe(face));
     return () => observer.disconnect();
+  }, [active, enabled, containerRef]);
+
+  return highlight;
+}
+
+function NavHighlight({ highlight }: { highlight: typeof EMPTY_HIGHLIGHT }) {
+  return (
+    <span
+      className={styles.indicator}
+      data-nav-highlight
+      data-animate={highlight.animate}
+      aria-hidden="true"
+      style={{
+        transform: `translate(${highlight.left}px, ${highlight.top}px)`,
+        width: highlight.width,
+        height: highlight.height,
+        opacity: highlight.visible ? 1 : 0,
+      }}
+    />
+  );
+}
+
+export function TopNav() {
+  const [active, setActive] = useState(ITEMS[0].id);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const navigation = useRef<HTMLElement>(null);
+  const desktop = useRef<HTMLDivElement>(null);
+  const mobile = useRef<HTMLDivElement>(null);
+  const menuButton = useRef<HTMLButtonElement>(null);
+  const desktopHighlight = useNavHighlight(desktop, active);
+  const mobileHighlight = useNavHighlight(mobile, active, menuOpen);
+
+  useEffect(() => {
+    let frame = 0;
+    const update = () => {
+      frame = 0;
+      const sections = ITEMS.map((i) => document.getElementById(i.id)).filter(
+        (el): el is HTMLElement => !!el,
+      );
+      const current = [...sections]
+        .reverse()
+        .find(
+          (el) => el.getBoundingClientRect().top <= window.innerHeight * 0.35,
+        );
+      const atBottom =
+        window.scrollY > 0 &&
+        window.scrollY + window.innerHeight >=
+          document.documentElement.scrollHeight - 2;
+      setActive(
+        atBottom ? ITEMS[ITEMS.length - 1].id : (current?.id ?? ITEMS[0].id),
+      );
+    };
+    const scroll = () => {
+      if (!frame) frame = requestAnimationFrame(update);
+    };
+    update();
+    window.addEventListener("scroll", scroll, { passive: true });
+    window.addEventListener("resize", scroll);
+    return () => {
+      cancelAnimationFrame(frame);
+      window.removeEventListener("scroll", scroll);
+      window.removeEventListener("resize", scroll);
+    };
   }, []);
+
+  useEffect(() => {
+    if (!menuOpen) return;
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        setMenuOpen(false);
+        menuButton.current?.focus({ preventScroll: true });
+      }
+    };
+    const closeOutside = (event: Event) => {
+      if (
+        event.target instanceof Node &&
+        !navigation.current?.contains(event.target)
+      ) {
+        setMenuOpen(false);
+      }
+    };
+    const wideScreen = window.matchMedia("(min-width: 901px)");
+    const closeOnResize = () => {
+      if (wideScreen.matches) setMenuOpen(false);
+    };
+    document.addEventListener("keydown", closeOnEscape);
+    document.addEventListener("pointerdown", closeOutside);
+    document.addEventListener("focusin", closeOutside);
+    wideScreen.addEventListener("change", closeOnResize);
+    return () => {
+      document.removeEventListener("keydown", closeOnEscape);
+      document.removeEventListener("pointerdown", closeOutside);
+      document.removeEventListener("focusin", closeOutside);
+      wideScreen.removeEventListener("change", closeOnResize);
+    };
+  }, [menuOpen]);
+
+  function selectSection(event: MouseEvent<HTMLAnchorElement>, id: string) {
+    if (
+      event.button !== 0 ||
+      event.metaKey ||
+      event.ctrlKey ||
+      event.shiftKey ||
+      event.altKey
+    )
+      return;
+    setMenuOpen(false);
+    const section = document.getElementById(id);
+    if (!section) return;
+    // Native anchors keep the URL and scrolling; focus leaves the closing menu.
+    if (!section.hasAttribute("tabindex")) {
+      section.setAttribute("tabindex", "-1");
+      section.addEventListener(
+        "blur",
+        () => section.removeAttribute("tabindex"),
+        {
+          once: true,
+        },
+      );
+    }
+    section.focus({ preventScroll: true });
+  }
 
   return (
     <nav
-      aria-label="Section navigation"
-      className="sticky top-0 z-40 border-b border-hairline bg-paper/90 backdrop-blur"
+      ref={navigation}
+      className={`site-nav ${styles.nav}`}
+      aria-label="Main navigation"
     >
-      <div className="mx-auto flex max-w-5xl items-center justify-between gap-3 pl-5 pr-14 py-2.5 sm:px-8">
-        {/* Drawing-sheet mark / home link */}
+      <div className={`page-width ${styles.inner}`}>
         <a
           href="#top"
-          className="mono-label shrink-0 text-ink transition-colors hover:text-blueline"
+          className={styles.brand}
+          onClick={() => setMenuOpen(false)}
+          aria-label="Tarek Rahman, back to top"
         >
-          HOME <span className="text-graphite">/ DWG</span>
+          <span className={styles.brandMark}>
+            tr<span>.</span>
+          </span>
+          <span className={styles.brandName}>Tarek Rahman</span>
         </a>
-
-        <span className="mono-label hidden text-blueline/60 sm:inline">
-          SCAN: {String(scanPct).padStart(3, "0")}%
-        </span>
-
-        {/* Desktop links */}
-        <ul className="hidden flex-1 items-center justify-center gap-0.5 lg:flex">
-          {ITEMS.map((item) => (
-            <li key={item.id}>
-              <a
-                href={`#${item.id}`}
-                aria-current={active === item.id ? "true" : undefined}
-                className={`mono-label rounded-sm px-2 py-1 transition-colors hover:bg-blueline/10 hover:text-blueline ${
-                  active === item.id
-                    ? "bg-blueline/10 text-blueline"
-                    : "text-graphite"
-                }`}
-              >
-                {item.label}
-              </a>
-            </li>
-          ))}
-        </ul>
-
-        <div className="flex items-center gap-2">
+        <div
+          ref={desktop}
+          className={styles.desktop}
+          data-highlight-ready={desktopHighlight.visible}
+        >
+          <ul className={styles.links}>
+            {ITEMS.map((item) => (
+              <li key={item.id}>
+                <a
+                  href={`#${item.id}`}
+                  className={styles.navLink}
+                  aria-current={active === item.id ? "location" : undefined}
+                >
+                  <span className={styles.linkFace} data-nav-face>
+                    {item.label}
+                  </span>
+                </a>
+              </li>
+            ))}
+          </ul>
+          <NavHighlight highlight={desktopHighlight} />
+        </div>
+        <div className={styles.controls}>
           <ThemeToggle />
-
-          {/* Mobile menu toggle */}
           <button
+            ref={menuButton}
             type="button"
-            onClick={() => setMenuOpen((o) => !o)}
+            className={styles.menuButton}
+            onClick={() => setMenuOpen((open) => !open)}
             aria-expanded={menuOpen}
             aria-controls="mobile-nav"
-            className="mono-label inline-flex items-center gap-2 border border-hairline px-2.5 py-1 text-ink lg:hidden"
+            aria-label={menuOpen ? "Close navigation" : "Open navigation"}
           >
-            {menuOpen ? "CLOSE" : "INDEX"}
-            <span aria-hidden="true" className="flex flex-col gap-[3px]">
-              <span className="block h-px w-3.5 bg-current" />
-              <span className="block h-px w-3.5 bg-current" />
-              <span className="block h-px w-3.5 bg-current" />
-            </span>
+            {menuOpen ? "Close" : "Index"}
+            <span aria-hidden="true">{menuOpen ? "−" : "+"}</span>
           </button>
         </div>
       </div>
-
-      {/* Mobile dropdown */}
-      {menuOpen ? (
-        <ul
-          id="mobile-nav"
-          className="grid grid-cols-2 gap-1 border-t border-hairline bg-paper pl-5 pr-14 py-3 sm:px-8 lg:hidden"
-        >
-          {ITEMS.map((item) => (
+      <div
+        ref={mobile}
+        id="mobile-nav"
+        className={`page-width ${styles.mobileNav}`}
+        data-highlight-ready={mobileHighlight.visible}
+        hidden={!menuOpen}
+      >
+        <ul className={styles.mobileLinks}>
+          {ITEMS.map((item, i) => (
             <li key={item.id}>
               <a
                 href={`#${item.id}`}
-                onClick={() => setMenuOpen(false)}
-                aria-current={active === item.id ? "true" : undefined}
-                className={`mono-label block rounded-sm px-2 py-2 transition-colors hover:bg-blueline/10 hover:text-blueline ${
-                  active === item.id ? "text-blueline" : "text-graphite"
-                }`}
+                className={styles.navLink}
+                onClick={(event) => selectSection(event, item.id)}
+                aria-current={active === item.id ? "location" : undefined}
               >
-                {item.label}
+                <span className={styles.linkFace} data-nav-face>
+                  <span aria-hidden="true">0{i + 1}</span>
+                  {item.label}
+                  <span aria-hidden="true">↗</span>
+                </span>
               </a>
             </li>
           ))}
         </ul>
-      ) : null}
+        <NavHighlight highlight={mobileHighlight} />
+      </div>
     </nav>
   );
 }

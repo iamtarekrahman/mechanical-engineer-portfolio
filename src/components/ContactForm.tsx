@@ -1,105 +1,116 @@
-"use client";
+﻿"use client";
 
 import { FormEvent, useState } from "react";
 
-type Status = "idle" | "sending" | "sent" | "error";
-
 export function ContactForm() {
-  const [status, setStatus] = useState<Status>("idle");
-
-  async function handleSubmit(e: FormEvent<HTMLFormElement>) {
-    e.preventDefault();
+  const [status, setStatus] = useState<"idle" | "sending" | "sent" | "error">(
+    "idle",
+  );
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (status === "sending") return;
+    const form = event.currentTarget;
+    const payload = new FormData(form);
     setStatus("sending");
-
-    const form = e.currentTarget;
-    const data = new FormData(form);
-
     try {
-      const res = await fetch("https://api.web3forms.com/submit", {
+      const response = await fetch("https://api.web3forms.com/submit", {
         method: "POST",
-        body: data,
+        body: payload,
       });
-
-      if (res.ok) {
-        setStatus("sent");
-        form.reset();
-      } else {
-        setStatus("error");
-      }
+      const result = await response.json();
+      if (!response.ok || result.success !== true)
+        throw new Error("Submission failed");
+      form.reset();
+      setStatus("sent");
     } catch {
       setStatus("error");
     }
   }
-
   return (
-    <form onSubmit={handleSubmit} className="ink-border bg-paper p-6 sm:p-8">
-      <input type="hidden" name="access_key" value="b494cdf3-75a9-4d18-b019-75e55253b10e" />
-      <input type="hidden" name="subject" value="New message from portfolio — Tarek Rahman" />
-
-      <div className="grid gap-6 sm:grid-cols-2">
-        <div>
-          <label htmlFor="cf-name" className="mono-label mb-2 block text-graphite">
-            Name
-          </label>
+    <form
+      className="contact-form"
+      onSubmit={handleSubmit}
+      aria-busy={status === "sending"}
+      onChange={() => {
+        if (status === "sent" || status === "error") setStatus("idle");
+      }}
+    >
+      <input
+        type="hidden"
+        name="access_key"
+        value="b494cdf3-75a9-4d18-b019-75e55253b10e"
+      />
+      <input
+        type="hidden"
+        name="subject"
+        value="New message from portfolio — Tarek Rahman"
+      />
+      <input
+        type="checkbox"
+        name="botcheck"
+        className="hidden"
+        tabIndex={-1}
+        aria-hidden="true"
+      />
+      <div className="form-row">
+        <div className="form-field">
+          <label htmlFor="cf-name">Your name</label>
           <input
             id="cf-name"
             name="name"
-            type="text"
+            autoComplete="name"
             required
-            placeholder="Your name"
-            className="w-full border border-hairline bg-transparent px-4 py-3 font-body text-ink placeholder:text-graphite/50 focus:border-blueline focus:outline-none"
+            placeholder="Full name"
+            maxLength={120}
+            disabled={status === "sending"}
           />
         </div>
-
-        <div>
-          <label htmlFor="cf-email" className="mono-label mb-2 block text-graphite">
-            Email
-          </label>
+        <div className="form-field">
+          <label htmlFor="cf-email">Email address</label>
           <input
             id="cf-email"
             name="email"
             type="email"
+            autoComplete="email"
             required
-            placeholder="you@email.com"
-            className="w-full border border-hairline bg-transparent px-4 py-3 font-body text-ink placeholder:text-graphite/50 focus:border-blueline focus:outline-none"
+            placeholder="you@example.com"
+            maxLength={254}
+            disabled={status === "sending"}
           />
         </div>
       </div>
-
-      <div className="mt-6">
-        <label htmlFor="cf-message" className="mono-label mb-2 block text-graphite">
-          Project Details
-        </label>
+      <div className="form-field">
+        <label htmlFor="cf-message">What’s on your mind?</label>
         <textarea
           id="cf-message"
           name="message"
           required
-          rows={5}
-          placeholder="Share a bit about what you'd like to design or build."
-          className="w-full resize-y border border-hairline bg-transparent px-4 py-3 font-body text-ink placeholder:text-graphite/50 focus:border-blueline focus:outline-none"
+          rows={4}
+          placeholder="An opportunity, a project, or a good engineering conversation…"
+          maxLength={5000}
+          disabled={status === "sending"}
         />
       </div>
-
-      <div className="mt-6">
-        <button
-          type="submit"
-          disabled={status === "sending"}
-          className="mono-label w-full rounded-full border border-hairline px-6 py-3 text-ink transition-colors hover:border-blueline hover:text-blueline disabled:opacity-50 sm:w-auto"
-        >
-          {status === "sending" ? "Sending..." : "Send Message"}
-        </button>
-      </div>
-
-      {status === "sent" && (
-        <p className="mono-label mt-4 text-blueline">
-          Message sent — I'll get back to you soon.
-        </p>
-      )}
-      {status === "error" && (
-        <p className="mono-label mt-4 text-redline">
-          Something went wrong. Please try again or email me directly.
-        </p>
-      )}
+      <button
+        type="submit"
+        className="draft-button draft-button--primary"
+        disabled={status === "sending"}
+      >
+        {status === "sending" ? "Sending…" : "Send a message"}{" "}
+        <span aria-hidden="true">↗</span>
+      </button>
+      <p
+        className="form-status"
+        data-error={status === "error"}
+        role="status"
+        aria-live="polite"
+      >
+        {status === "sent"
+          ? "Message received. Thank you for getting in touch."
+          : status === "error"
+            ? "Your message couldn’t be sent. Please try again or use the email link."
+            : ""}
+      </p>
     </form>
   );
 }

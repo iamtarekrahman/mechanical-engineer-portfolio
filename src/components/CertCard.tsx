@@ -1,82 +1,85 @@
-import { Certification } from "@/data/content";
-import { IssuerMark } from "./IssuerMark";
-import { TagRow } from "./Tag";
+"use client";
+
+import Image from "next/image";
+import { type Certification } from "@/data/content";
 import { ExternalLinkIcon } from "./icons";
+import { SpotlightCard } from "./SpotlightCard";
 
-/**
- * A certification rendered as a "certified component" spec sheet: issuer mark
- * in the corner, title, issuer, issue date, a part-number-style credential ID,
- * a verify link, and a row of topic tags.
- */
-export function CertCard({ cert }: { cert: Certification }) {
-  const hasVerify = cert.verifyUrl && cert.verifyUrl !== "#";
-
+/** The issuer's original document, displayed without cropping or visual filters. */
+export function CertCard({
+  cert,
+  number = "01",
+}: {
+  cert: Certification;
+  number?: string;
+}) {
   return (
-    <article className="spec-card flex h-full flex-col bg-paper ink-border">
-      {/* Header strip: mark + spec-sheet label */}
-      <div className="flex items-center justify-between border-b border-hairline px-4 py-3">
-        {cert.logoSrc ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={cert.logoSrc}
-            alt={`${cert.issuer} logo`}
-            className="h-7 w-auto max-w-[7.5rem] object-contain object-left"
-            draggable={false}
-          />
-        ) : (
-          <div className="text-blueline">
-            <IssuerMark mark={cert.mark} />
-          </div>
-        )}
-        <span className="mono-label text-graphite">SPEC SHEET</span>
-      </div>
-
-      <div className="flex flex-1 flex-col gap-4 px-4 py-4">
-        <div>
-          <h3 className="font-display text-lg font-semibold leading-snug text-ink">
-            {cert.title}
-          </h3>
-          <p className="mt-1 font-body text-sm text-graphite">
-            {cert.issuer}
-            {cert.platform ? (
-              <span className="text-graphite"> · via {cert.platform}</span>
-            ) : null}
-          </p>
+    <SpotlightCard
+      variant="panel"
+      className="certificate-gallery-card"
+      aria-labelledby="credential-heading"
+    >
+      <div className="certificate-mount">
+        <div className="certificate-mount-label">
+          <span>Original certificate</span>
+          <span>No. {number}</span>
         </div>
-
-        {/* Datasheet fields */}
-        <dl className="grid grid-cols-2 gap-x-4 gap-y-2 border-y border-hairline py-3">
+        <div
+          className="certificate-preview"
+          onContextMenu={(event) => event.preventDefault()}
+        >
+          <Image
+            src={cert.preview.src}
+            width={cert.preview.width}
+            height={cert.preview.height}
+            alt={`Original ${cert.title} certificate issued by ${cert.issuer}`}
+            quality={95}
+            sizes="(max-width: 850px) calc(100vw - 96px), 740px"
+            className="certificate-document-image"
+            draggable={false}
+            onDragStart={(event) => event.preventDefault()}
+          />
+        </div>
+      </div>
+      <div className="certificate-card-copy" data-highlight-scope={`credential-${cert.credentialId}`}>
+        <p className="certificate-card-kind">{cert.kind}</p>
+        <h3 id="credential-heading">{cert.title}</h3>
+        <p className="certificate-card-issuer">
+          {cert.issuer}
+          {cert.platform && cert.platform !== cert.issuer && (
+            <span> · {cert.platform}</span>
+          )}
+        </p>
+        <dl className="certificate-card-metadata">
           <div>
-            <dt className="mono-label text-graphite">Issued</dt>
-            <dd className="mt-0.5 font-mono text-sm text-ink">{cert.issued}</dd>
+            <dt>Issued</dt>
+            <dd>{cert.issued}</dd>
           </div>
+          {cert.expires && (
+            <div>
+              <dt>Expires</dt>
+              <dd>{cert.expires}</dd>
+            </div>
+          )}
           <div>
-            <dt className="mono-label text-graphite">Cred. ID</dt>
-            <dd className="mt-0.5 break-all font-mono text-sm text-ink">
-              {cert.credentialId}
+            <dt>Credential ID</dt>
+            <dd className="credential-id-value">
+              <span>{cert.credentialId}</span>
+              {cert.verifyUrl && (
+                <a
+                  className="credential-id-link"
+                  href={cert.verifyUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label={`Verify ${cert.title} credential (opens in a new tab)`}
+                >
+                  <ExternalLinkIcon />
+                </a>
+              )}
             </dd>
           </div>
         </dl>
-
-        <TagRow tags={cert.tags} />
-
-        <div className="mt-auto pt-1">
-          {hasVerify ? (
-            <a
-              href={cert.verifyUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="mono-label inline-flex items-center gap-1.5 text-blueline underline-offset-4 hover:underline"
-            >
-              Verify <ExternalLinkIcon />
-            </a>
-          ) : (
-            <span className="mono-label inline-flex items-center gap-1.5 text-graphite">
-              Verify — pending
-            </span>
-          )}
-        </div>
       </div>
-    </article>
+    </SpotlightCard>
   );
 }

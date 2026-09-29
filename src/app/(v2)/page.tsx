@@ -1,5 +1,4 @@
-import { ScanLine } from "@/components/ScanLine";
-import { Hero } from "@/components/Hero";
+﻿import { Hero } from "@/components/Hero";
 import { About } from "@/components/About";
 import { Experience } from "@/components/Experience";
 import { FeaturedProject } from "@/components/FeaturedProject";
@@ -8,29 +7,30 @@ import { EducationSection } from "@/components/EducationSection";
 import { Skills } from "@/components/Skills";
 import { AffiliationsAwards } from "@/components/AffiliationsAwards";
 import { Contact } from "@/components/Contact";
-import { GearMechanism } from "@/components/GearMechanism";
-import { ChainMechanism } from "@/components/ChainMechanism";
 import { TopNav } from "@/components/TopNav";
+import { EnergyGarden } from "@/components/EnergyGarden";
+import { TextHighlighter } from "@/components/TextHighlighter";
 
 export default function Page() {
   return (
     <>
-      <span id="top" className="sr-only" aria-hidden="true" />
+      <a className="skip-link" href="#main">
+        Skip to content
+      </a>
       <TopNav />
-      <ScanLine />
-      <main>
-        <GearMechanism />
-        <ChainMechanism />
+      <main id="main">
         <Hero />
-        <About />
-        <Experience />
+        <EnergyGarden />
         <FeaturedProject />
+        <Experience />
+        <Skills />
         <Certifications />
         <EducationSection />
-        <Skills />
+        <About />
         <AffiliationsAwards />
         <Contact />
       </main>
+      <TextHighlighter />
     </>
   );
 }

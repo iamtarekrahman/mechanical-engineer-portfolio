@@ -1,65 +1,60 @@
-import { SectionShell } from "./SectionShell";
-import { SheetImage } from "./SheetImage";
 import { ColorRevealImage } from "./ColorRevealImage";
+import { SectionShell } from "./SectionShell";
+import { Reveal } from "./Reveal";
+import { SpotlightCard } from "./SpotlightCard";
 
 export function About() {
   return (
     <SectionShell
       id="about"
-      kicker="GENERAL NOTES"
-      title="About"
-      sheet="ABOUT"
-      rev="01"
-      variant="plain"
+      kicker="The person behind the drawings"
+      title="Curiosity, put to work."
     >
-      <div className="grid gap-8 md:grid-cols-[minmax(0,1fr)_16rem] md:gap-10">
-        <div className="order-2 md:order-1">
-          <div className="space-y-4 text-justify font-body text-[1.02rem] leading-relaxed text-ink">
-            <p>
-              I&apos;m a mechanical engineering graduate from IUBAT, working as
-              an Assistant Mechanical Engineer at Hunan Construction Engineering
-              Group (HCEG) on the Rajshahi WASA Surface Water Treatment Plant.
-              Most of my day is submittal review: I take a manufacturer&apos;s
-              technical package for equipment like pumps, valves, chlorination
-              systems, and cranes, and check it line by line against consultant
-              comments and international standards — BS, ISO, IEC — until every
-              gap is closed.
-            </p>
-            <p>
-              Before this I interned in maintenance and operations at Heidelberg
-              Materials Bangladesh, rotating through maintenance, production, and
-              quality control to see how a plant actually runs rather than how
-              the manual says it should.
-            </p>
-            <p>
-              For my thesis I built and tested a Tesla turbine prototype from
-              scratch. Across all of it, the same habit keeps showing up: I treat
-              every compliance comment and every experimental result as a small
-              investigation, not a checkbox to clear.
-            </p>
-          </div>
-        </div>
-
-        {/* Photo ID box, styled like a drawing-sheet photo field */}
-        <figure className="order-1 md:order-2">
-          <div className="ink-border bg-white p-2">
-            <div className="relative aspect-[4/5] w-full overflow-hidden border border-hairline bg-white">
-              <ColorRevealImage
-                src="/images/profile-c.jpg"
-                alt="Tarek Rahman"
-                spotlightRadius={120}
-                className="object-cover"
-              />
-            </div>
-            <figcaption className="mt-2 flex items-center justify-between gap-2 px-1 pb-0.5">
-              <span className="mono-label shrink-0 text-graphite">ID PHOTO</span>
-              <span className="signature whitespace-nowrap text-xl leading-none text-[#0891b2]">
-                Tarek Rahman
-              </span>
-            </figcaption>
-          </div>
+      <SpotlightCard
+        as="div"
+        variant="panel"
+        className="about-grid content-panel"
+      >
+        <figure className="portrait">
+          <ColorRevealImage
+            src="/images/profile-c.jpg"
+            alt="Tarek Rahman"
+            fadeDuration={10000}
+            className="portrait-image"
+          />
+          <figcaption>
+            <span>Tarek Rahman</span>
+          </figcaption>
+          <span className="portrait-note">
+            Engineer. Investigator. Always learning.
+          </span>
         </figure>
-      </div>
+        <Reveal className="about-copy">
+          <p className="about-lead">
+            I like understanding how things work—and following the details until
+            they do.
+          </p>
+          <p>
+            I’m a mechanical engineering graduate from IUBAT, now working at
+            Hunan Construction Engineering Group on the Rajshahi WASA Surface
+            Water Treatment Plant.
+          </p>
+          <p>
+            My work connects technical drawings, equipment documentation, and
+            the practical demands of the site. I enjoy tracing a problem back to
+            its cause and finding a clear way forward.
+          </p>
+          <p>
+            From plant maintenance at Heidelberg Materials to building and
+            testing my thesis prototype, curiosity has shaped how I approach
+            engineering. There is always another detail worth understanding.
+          </p>
+          <div className="about-signoff">
+            <span className="signature">Tarek Rahman</span>
+            <span className="eyebrow">Drawn from experience.</span>
+          </div>
+        </Reveal>
+      </SpotlightCard>
     </SectionShell>
   );
 }

@@ -1,0 +1,559 @@
+.panel {
+  min-width: 0;
+  border: 1px solid var(--hairline);
+  background: var(--surface);
+}
+.heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 20px 22px 18px;
+}
+.eyebrow {
+  font:
+    500 11px/1.6 var(--font-mono),
+    monospace;
+  letter-spacing: 0.07em;
+  color: var(--graphite);
+}
+.heading h2 {
+  font-weight: 500;
+  font-size: 30px;
+  letter-spacing: -0.035em;
+  line-height: 1.3;
+  margin-top: 6px;
+}
+.liveMark {
+  font:
+    500 11px var(--font-mono),
+    monospace;
+  color: var(--blueline);
+  display: flex;
+  gap: 7px;
+  align-items: center;
+}
+.liveMark i {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: currentColor;
+}
+.toolbar {
+  position: relative;
+  z-index: 20;
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+  border-block: 1px solid var(--hairline);
+  padding: 8px 16px;
+  background: var(--surface);
+}
+.toolbar button {
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  min-height: 40px;
+  padding: 8px 10px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--graphite);
+  font-size: 14px;
+  line-height: 1.2;
+}
+.toolbar svg {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+.toolbar button[aria-pressed="true"] {
+  color: var(--blueline);
+  background: color-mix(in srgb, var(--blueline) 9%, var(--surface));
+  border-color: color-mix(in srgb, var(--blueline) 30%, var(--hairline));
+}
+.toolbar button:hover:not(:disabled),
+.viewRow button:hover:not(:disabled) {
+  color: var(--ink);
+  border-color: var(--brass);
+}
+.toolbar .expandTool {
+  margin-left: auto;
+}
+.stage {
+  position: relative;
+  width: 100%;
+  height: 320px;
+  overflow: hidden;
+  background-color: var(--paper);
+  background-image: radial-gradient(var(--hairline) 0.8px, transparent 0.8px);
+  background-size: 18px 18px;
+}
+.stage[data-engine-overflow="true"][data-engine-status="ready"] {
+  overflow: visible;
+}
+/* Keep the model in front of page chrome, including the workbench controls.
+   Only the input surface handles gestures, so buttons remain clickable. */
+.canvas {
+  position: absolute;
+  display: block;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  max-height: none;
+  z-index: 50;
+  opacity: 0;
+  pointer-events: none;
+}
+.canvas[hidden] {
+  display: none;
+}
+.interactionSurface {
+  position: absolute;
+  inset: 0;
+  z-index: 11;
+  background: transparent;
+  pointer-events: none;
+  touch-action: none;
+  cursor: grab;
+}
+.interactionSurface:active {
+  cursor: grabbing;
+}
+.interactionSurface:focus-visible {
+  outline-offset: -5px;
+}
+.stage[data-engine-status="ready"] .canvas {
+  opacity: 1;
+}
+.stage[data-engine-status="ready"] .interactionSurface {
+  pointer-events: auto;
+}
+.stage[data-mode="pan"] .interactionSurface {
+  cursor: move;
+}
+.fallbackDrawing {
+  width: 100%;
+  height: 100%;
+  color: var(--blueline);
+}
+.partLabel {
+  position: absolute;
+  z-index: 51;
+  left: 0;
+  top: 0;
+  pointer-events: none;
+  display: flex;
+  gap: 7px;
+  align-items: center;
+  color: var(--ink);
+  padding: 5px 9px;
+  font:
+    500 11px/1.5 var(--font-mono),
+    monospace;
+  border: 1px solid var(--hairline);
+  background: color-mix(in srgb, var(--surface) 94%, transparent);
+  box-shadow: 0 3px 12px #0000000a;
+}
+.partLabel[hidden] {
+  display: none;
+}
+.partLabel i {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--brass);
+}
+.stageBadge {
+  position: absolute;
+  bottom: 18px;
+  left: 22px;
+  font:
+    500 11px/1.6 var(--font-mono),
+    monospace;
+  color: var(--graphite);
+  letter-spacing: 0.05em;
+  pointer-events: none;
+}
+.zoomTools {
+  position: absolute;
+  z-index: 20;
+  right: 18px;
+  bottom: 14px;
+  display: flex;
+  border: 1px solid var(--hairline);
+  background: var(--surface);
+}
+.zoomTools button {
+  font-weight: 600;
+  min-width: 38px;
+  min-height: 38px;
+  background: transparent;
+  border: 0;
+  font-size: 20px;
+  line-height: 1;
+}
+.zoomTools button + button {
+  border-left: 1px solid var(--hairline);
+}
+.zoomTools button:hover {
+  background: color-mix(in srgb, var(--brass) 10%, var(--surface));
+}
+.loading {
+  position: absolute;
+  bottom: 48px;
+  left: 22px;
+  font-size: 12px;
+  color: var(--graphite);
+}
+.fallbackMessage {
+  position: absolute;
+  inset: auto 18px 45px;
+  padding: 12px;
+  background: var(--surface);
+  border: 1px solid var(--hairline);
+  font-size: 14px;
+  line-height: 1.6;
+}
+.fallbackMessage button {
+  font-weight: 600;
+  background: transparent;
+  border: 0;
+  color: var(--blueline);
+  text-decoration: underline;
+  padding: 6px 10px;
+}
+.viewRow {
+  position: relative;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 9px 22px;
+  border-block: 1px solid var(--hairline);
+  background: var(--surface);
+}
+.viewRow p {
+  font-size: 12px;
+  color: var(--graphite);
+}
+.viewRow > div {
+  display: flex;
+  gap: 4px;
+}
+.viewRow button {
+  font-weight: 600;
+  padding: 5px 8px;
+  min-height: 34px;
+  color: var(--graphite);
+  background: transparent;
+  border: 1px solid transparent;
+  font-size: 12px;
+}
+.controls {
+  position: relative;
+  z-index: 20;
+  padding: 20px 22px 0;
+  background: var(--surface);
+}
+.explosionHeading {
+  position: relative;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  justify-content: space-between;
+  background: var(--surface);
+}
+.explosionHeading label {
+  font-weight: 500;
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--graphite);
+}
+.explosionHeading output {
+  color: var(--ink);
+  margin-left: 8px;
+  font:
+    500 12px var(--font-mono),
+    monospace;
+}
+.explosionHeading button {
+  font-weight: 600;
+  background: transparent;
+  padding: 6px 0 6px 8px;
+  min-height: 36px;
+  color: var(--blueline);
+  border: 0;
+  white-space: nowrap;
+  font-size: 14px;
+}
+.explosionHeading button span {
+  margin-left: 8px;
+}
+.slider {
+  position: relative;
+  z-index: 20;
+  display: block;
+  width: 100%;
+  height: 32px;
+  margin: 3px 0 16px;
+  accent-color: var(--blueline);
+  cursor: ew-resize;
+  background: var(--surface);
+}
+.partList {
+  position: relative;
+  z-index: 20;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+  background: var(--surface);
+}
+.partList button {
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 40px;
+  text-align: left;
+  background: transparent;
+  border: 1px solid var(--hairline);
+  padding: 8px 10px;
+  font-size: 14px;
+  line-height: 1.4;
+}
+.partList button > span {
+  color: var(--graphite);
+  font:
+    500 11px var(--font-mono),
+    monospace;
+}
+.partList button[aria-pressed="true"] {
+  border-color: var(--blueline);
+  background: color-mix(in srgb, var(--blueline) 9%, var(--surface));
+  color: var(--blueline);
+}
+.partList button:hover {
+  border-color: var(--brass);
+}
+.partInfo {
+  display: flex;
+  gap: 16px;
+  margin-top: 22px;
+  padding-bottom: 20px;
+  min-height: 117px;
+}
+.partNumber {
+  color: var(--brass);
+  font:
+    italic 28px/1.25 var(--font-display),
+    Georgia,
+    serif;
+}
+.partInfo h3 {
+  font-weight: 500;
+  font-size: 21px;
+  line-height: 1.3;
+  margin-bottom: 7px;
+}
+.partInfo p {
+  font-size: 16px;
+  line-height: 1.7;
+  color: var(--graphite);
+}
+.help {
+  border-top: 1px solid var(--hairline);
+}
+.help summary {
+  position: relative;
+  z-index: 20;
+  font-weight: 600;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 0;
+  color: var(--graphite);
+  font-size: 12px;
+  list-style: none;
+  background: var(--surface);
+}
+.help summary::-webkit-details-marker {
+  display: none;
+}
+.help summary span {
+  font-size: 18px;
+}
+.help[open] summary span {
+  transform: rotate(45deg);
+}
+.help p {
+  margin-bottom: 16px;
+  font-size: 14px;
+  color: var(--graphite);
+  line-height: 1.8;
+}
+.modal {
+  width: min(1200px, calc(100vw - 48px));
+}
+.expanded {
+  margin: 24px;
+}
+.expanded .stage {
+  height: min(52dvh, 540px);
+  min-height: 280px;
+  isolation: isolate;
+}
+.expanded .controls {
+  padding: 24px 28px 0;
+}
+.expanded .partList {
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+}
+.expanded .partInfo {
+  min-height: 0;
+}
+@media (max-width: 1100px) and (min-width: 901px) {
+  .toolbar .expandTool span {
+    display: inline;
+  }
+  .panel:not(.expanded) .toolbar {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    padding: 10px;
+    gap: 6px;
+  }
+  .panel:not(.expanded) .toolbar button {
+    min-width: 0;
+    min-height: 44px;
+    padding-inline: 8px;
+  }
+  .toolbar .expandTool {
+    margin-left: 0;
+  }
+  .partList {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 900px) {
+  .stage {
+    height: 390px;
+  }
+  .partInfo {
+    min-height: 0;
+  }
+  .expanded .partList {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+@media (max-width: 640px) {
+  .heading {
+    padding: 20px 16px;
+    gap: 10px;
+  }
+  .heading h2 {
+    font-size: 29px;
+  }
+  .eyebrow {
+    font-size: 11px;
+    letter-spacing: 0.03em;
+  }
+  .toolbar {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    padding: 10px;
+    gap: 6px;
+  }
+  .toolbar button {
+    flex-direction: column;
+    gap: 5px;
+    font-size: 12px;
+    padding: 8px 6px;
+    min-width: 0;
+    min-height: 56px;
+  }
+  .toolbar .expandTool {
+    margin-left: 0;
+  }
+  .toolbar .expandTool span {
+    display: inline;
+  }
+  .stage {
+    height: 310px;
+  }
+  .stageBadge {
+    left: 16px;
+    font-size: 11px;
+  }
+  .viewRow {
+    flex-wrap: wrap;
+    padding: 10px 16px;
+    gap: 3px 8px;
+  }
+  .viewRow p {
+    font-size: 11px;
+  }
+  .viewRow > div {
+    margin-left: auto;
+  }
+  .controls,
+  .expanded .controls {
+    padding: 16px 16px 0;
+  }
+  .explosionHeading {
+    gap: 6px;
+    align-items: flex-start;
+  }
+  .explosionHeading label {
+    font-size: 12px;
+  }
+  .explosionHeading output {
+    display: block;
+    margin: 3px 0 0;
+  }
+  .explosionHeading button {
+    font-size: 12px;
+  }
+  .partList,
+  .expanded .partList {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .partList button {
+    font-size: 12px;
+    padding: 9px 7px;
+    gap: 6px;
+  }
+  .partInfo {
+    gap: 12px;
+  }
+  .partInfo p {
+    font-size: 16px;
+  }
+  .expanded {
+    margin: 16px;
+  }
+  .expanded .stage {
+    height: 310px;
+    min-height: 0;
+  }
+  .expanded .heading {
+    flex-wrap: wrap;
+  }
+  .expanded .liveMark {
+    display: none;
+  }
+}
+@media print {
+  .toolbar,
+  .zoomTools,
+  .help,
+  .viewRow,
+  .explosionHeading,
+  .slider {
+    display: none;
+  }
+}

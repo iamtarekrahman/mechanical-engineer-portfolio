@@ -1,0 +1,143 @@
+/* The document theme also positions the CSS thumb before React hydrates. */
+.theme-switch {
+  position: relative;
+  display: inline-flex;
+  flex: 0 0 80px;
+  width: 80px;
+  height: 44px;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  isolation: isolate;
+}
+
+.theme-switch:focus-visible {
+  outline: 2px solid var(--blueline);
+  outline-offset: 3px;
+  border-radius: 999px;
+}
+
+.theme-switch__track {
+  --toggle-current: #b9925680;
+  --toggle-spark: #fffdf3c9;
+  position: absolute;
+  inset: 4px 0;
+  overflow: hidden;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #d2d6d8, #edf0ef 50%, #b6bec2);
+  box-shadow: inset 0 1px 3px #152b3a35, inset 0 0 0 1px #73818b66,
+    0 1px 0 #ffffffbd, 0 2px 5px #25354510;
+  transition: box-shadow 220ms ease;
+}
+
+/* The site owner explicitly wants this control to keep moving, including its
+   CSS fallback. These scoped overrides leave other reduced-motion rules intact. */
+.theme-switch__track::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background-image:
+    radial-gradient(circle at 6px 11px, var(--toggle-spark) 0 1px, transparent 1.8px),
+    radial-gradient(circle at 12px 25px, var(--toggle-current) 0 1px, transparent 2px),
+    linear-gradient(110deg, transparent 25%, var(--toggle-current) 48%, transparent 72%);
+  background-size: 24px 36px, 37px 36px, 120px 100%;
+  animation: theme-toggle-current 4s linear infinite;
+  animation-duration: 4s !important;
+  animation-iteration-count: infinite !important;
+}
+.theme-switch[data-renderer="webgl"] .theme-switch__track::before { display: none; }
+@keyframes theme-toggle-current {
+  from { background-position: 0 0, 0 0, -120px 0; }
+  to { background-position: 96px 0, 74px 0, 120px 0; }
+}
+
+.theme-switch__fallback-thumb {
+  position: absolute;
+  z-index: 0;
+  top: 4px;
+  left: 4px;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 32% 23%, #fffef9, #f4efe0 42%, #adb4b6);
+  box-shadow: 0 2px 4px #192a3d48, inset 0 0 0 1px #ffffffc7,
+    inset -2px -2px 4px #cfae7340;
+  transition: transform 280ms cubic-bezier(.22,.8,.3,1), opacity 100ms ease;
+}
+
+.theme-switch__canvas {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 80px;
+  height: 36px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.theme-switch[data-renderer="webgl"] .theme-switch__canvas { opacity: 1; }
+.theme-switch[data-renderer="webgl"] .theme-switch__fallback-thumb { opacity: 0; }
+
+.theme-switch__symbol {
+  position: absolute;
+  top: 8px;
+  left: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  color: #795621;
+  pointer-events: none;
+  transition: transform 280ms cubic-bezier(.22,.8,.3,1), color 220ms ease;
+}
+
+.theme-switch__moon { display: none; }
+
+[data-theme="dark"] .theme-switch__track {
+  --toggle-current: #549fffa6;
+  --toggle-spark: #d7f3ffeb;
+  background: radial-gradient(ellipse at 62% 65%, #175eaa, #112e66 46%, #091225 87%);
+  box-shadow: inset 0 1px 4px #0008, inset 0 0 0 1px #5490e161,
+    0 0 13px #387bdd20;
+}
+
+[data-theme="dark"] .theme-switch__fallback-thumb {
+  background: radial-gradient(circle at 32% 23%, #fff, #c6def5 45%, #5f89b7);
+  box-shadow: 0 2px 5px #0007, 0 0 8px #66b4ff75, inset 0 0 0 1px #cbebffac;
+}
+
+[data-theme="dark"] .theme-switch__fallback-thumb,
+[data-theme="dark"] .theme-switch__symbol { transform: translateX(44px); }
+[data-theme="dark"] .theme-switch__symbol { color: #123656; }
+[data-theme="dark"] .theme-switch__sun { display: none; }
+[data-theme="dark"] .theme-switch__moon { display: block; }
+
+.theme-switch:hover .theme-switch__track { box-shadow: inset 0 1px 3px #152b3a35, 0 0 0 2px color-mix(in srgb, var(--brass, #ac8644) 25%, transparent); }
+[data-theme="dark"] .theme-switch:hover .theme-switch__track { box-shadow: inset 0 1px 4px #0008, 0 0 0 2px #5ea9ff32, 0 0 14px #387bdd30; }
+
+@media (forced-colors: active) {
+  .theme-switch__track { border: 1px solid ButtonText; background: Canvas; }
+  .theme-switch .theme-switch__canvas { display: none; }
+  .theme-switch[data-renderer="webgl"] .theme-switch__fallback-thumb { opacity: 1; }
+  .theme-switch__fallback-thumb { border: 1px solid ButtonText; background: ButtonFace; }
+  .theme-switch__symbol, [data-theme="dark"] .theme-switch__symbol { color: ButtonText; }
+  .theme-switch[data-renderer] .theme-switch__track::before {
+    display: block;
+    inset: 3px auto auto 4px;
+    width: 3px;
+    height: 3px;
+    background: Highlight;
+    forced-color-adjust: none;
+    animation-name: theme-toggle-forced-current;
+  }
+}
+@keyframes theme-toggle-forced-current {
+  from { transform: translateX(0); }
+  to { transform: translateX(66px); }
+}

@@ -1,103 +1,137 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { SunIcon, MoonIcon } from "./icons";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { MoonIcon, SunIcon } from "./icons";
+import type { ThemeToggleScene } from "./theme-toggle-scene";
+import "./theme-toggle.css";
 
-type Mode = "light" | "dark" | "system";
+type Preference = "light" | "dark" | "system";
+let memoryPreference: Preference | null = null;
 
-function systemPrefersDark() {
-  return (
-    typeof window !== "undefined" &&
-    window.matchMedia("(prefers-color-scheme: dark)").matches
-  );
+function preference(): Preference {
+  if (memoryPreference) return memoryPreference;
+  try {
+    const saved = window.localStorage.getItem("theme");
+    return saved === "light" || saved === "dark" ? saved : "system";
+  } catch {
+    return "system";
+  }
 }
 
-function isDark(mode: Mode) {
-  return mode === "dark" || (mode === "system" && systemPrefersDark());
+function readDark() {
+  const declared = document.documentElement.dataset.theme;
+  if (declared === "light" || declared === "dark") return declared === "dark";
+  return window.matchMedia("(prefers-color-scheme: dark)").matches;
 }
 
-function applyTheme(mode: Mode) {
-  document.documentElement.setAttribute(
-    "data-theme",
-    isDark(mode) ? "dark" : "light",
-  );
+function applyPreference(selected: Preference) {
+  const dark = selected === "dark" ||
+    (selected === "system" && window.matchMedia("(prefers-color-scheme: dark)").matches);
+  document.documentElement.dataset.theme = dark ? "dark" : "light";
 }
 
-/**
- * Briefly enables the palette transition (see `.theme-transition` in
- * globals.css) so a theme switch cross-fades, then removes it so normal
- * hovers and interactions aren't globally transitioned.
- */
-function flashThemeTransition() {
+function subscribeTheme(notify: () => void) {
   const root = document.documentElement;
-  root.classList.add("theme-transition");
-  window.setTimeout(() => root.classList.remove("theme-transition"), 320);
+  const system = window.matchMedia("(prefers-color-scheme: dark)");
+  const onSystem = () => {
+    if (preference() === "system") applyPreference("system");
+  };
+  const onStorage = (event: StorageEvent) => {
+    if (event.key !== "theme" && event.key !== null) return;
+    memoryPreference = null;
+    applyPreference(preference());
+  };
+  const observer = new MutationObserver(notify);
+  observer.observe(root, { attributes: true, attributeFilter: ["data-theme"] });
+  system.addEventListener("change", onSystem);
+  window.addEventListener("storage", onStorage);
+  return () => {
+    observer.disconnect();
+    system.removeEventListener("change", onSystem);
+    window.removeEventListener("storage", onStorage);
+  };
 }
 
-/**
- * Sliding Sun / Moon theme switch. Toggles between light and dark; the initial
- * state resolves from the saved choice or the OS preference (applied pre-paint
- * by the layout's inline script, so there's no flash). Choosing a side stores
- * an explicit "light" or "dark" preference.
- */
+const serverDark = () => false;
+
+/** A real theme control with a compact ThreeUI shader treatment over a CSS fallback. */
 export function ThemeToggle() {
-  const [mode, setMode] = useState<Mode>("system");
-  const [mounted, setMounted] = useState(false);
+  const dark = useSyncExternalStore(subscribeTheme, readDark, serverDark);
+  const buttonRef = useRef<HTMLButtonElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const sceneRef = useRef<ThemeToggleScene | null>(null);
+  const [rendered, setRendered] = useState(false);
 
   useEffect(() => {
-    const stored = (localStorage.getItem("theme") as Mode | null) ?? "system";
-    setMode(stored);
-    setMounted(true);
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    let disposed = false;
+
+    // The CSS switch is immediately useful; load WebGL only after hydration.
+    void import("./theme-toggle-scene").then(({ createThemeToggleScene }) => {
+      if (disposed) return;
+      try {
+        sceneRef.current = createThemeToggleScene(canvas, {
+          dark: readDark(),
+          onFailure: () => { if (!disposed) setRendered(false); },
+        });
+        setRendered(true);
+      } catch {
+        // The underlying CSS control keeps the same interaction and geometry.
+        setRendered(false);
+      }
+    }).catch(() => { if (!disposed) setRendered(false); });
+
+    return () => {
+      disposed = true;
+      sceneRef.current?.dispose();
+      sceneRef.current = null;
+    };
   }, []);
 
-  // Track OS changes while still on "system".
-  useEffect(() => {
-    if (mode !== "system") return;
-    const mq = window.matchMedia("(prefers-color-scheme: dark)");
-    const onChange = () => {
-      flashThemeTransition();
-      applyTheme("system");
-      // force re-render so the knob reflects the new system state
-      setMode("system");
-    };
-    mq.addEventListener("change", onChange);
-    return () => mq.removeEventListener("change", onChange);
-  }, [mode]);
-
-  const dark = mounted ? isDark(mode) : false;
+  useEffect(() => { sceneRef.current?.setDark(dark); }, [dark]);
 
   function toggle() {
-    const next: Mode = dark ? "light" : "dark";
-    flashThemeTransition();
-    setMode(next);
-    localStorage.setItem("theme", next);
-    applyTheme(next);
+    // Read the document so an external theme change cannot make a click stale.
+    const next = readDark() ? "light" : "dark";
+    try {
+      window.localStorage.setItem("theme", next);
+      memoryPreference = null;
+    } catch {
+      memoryPreference = next;
+    }
+    applyPreference(next);
   }
 
   return (
     <button
+      ref={buttonRef}
       type="button"
       role="switch"
       aria-checked={dark}
-      aria-label={dark ? "Switch to light theme" : "Switch to dark theme"}
-      title={dark ? "Dark theme" : "Light theme"}
+      aria-label="Dark mode"
+      title="Toggle dark mode"
+      className="theme-switch"
+      data-renderer={rendered ? "webgl" : "css"}
       onClick={toggle}
-      className="relative inline-flex h-7 w-14 items-center rounded-full border border-hairline bg-[color-mix(in_srgb,var(--blueline)_8%,var(--paper))] transition-colors"
+      onPointerMove={(event) => {
+        if (event.pointerType === "touch") return;
+        const bounds = event.currentTarget.getBoundingClientRect();
+        sceneRef.current?.setPointer(
+          ((event.clientX - bounds.left) / bounds.width - 0.5) * 2,
+          -((event.clientY - bounds.top) / bounds.height - 0.5) * 2,
+        );
+      }}
+      onPointerLeave={() => sceneRef.current?.setPointer(0, 0)}
+      onFocus={() => sceneRef.current?.wake()}
     >
-      {/* Track icons */}
-      <span className="pointer-events-none absolute left-1.5 text-graphite">
-        <SunIcon size={13} />
+      <span className="theme-switch__track" aria-hidden="true">
+        <span className="theme-switch__fallback-thumb" />
+        <canvas ref={canvasRef} className="theme-switch__canvas" width="160" height="72" />
       </span>
-      <span className="pointer-events-none absolute right-1.5 text-graphite">
-        <MoonIcon size={13} />
-      </span>
-      {/* Sliding knob showing the active icon */}
-      <span
-        className={`pointer-events-none z-10 flex h-5 w-5 items-center justify-center rounded-full bg-paper text-blueline shadow-sm ring-1 ring-hairline transition-transform duration-200 ${
-          dark ? "translate-x-[1.85rem]" : "translate-x-[0.15rem]"
-        }`}
-      >
-        {dark ? <MoonIcon size={12} /> : <SunIcon size={12} />}
+      <span className="theme-switch__symbol" aria-hidden="true">
+        <SunIcon size={13} className="theme-switch__sun" />
+        <MoonIcon size={12} className="theme-switch__moon" />
       </span>
     </button>
   );

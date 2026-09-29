@@ -1,0 +1,115 @@
+.surface {
+  /* Match the warm amber used by the active navigation button. */
+  --spotlight-color: #eeb04d;
+  --spotlight-edge: #c58a36;
+  --spotlight-radius: 260px;
+  position: relative;
+  isolation: isolate;
+  transition:
+    border-color 180ms ease,
+    box-shadow 180ms ease,
+    transform 180ms ease;
+}
+
+.card {
+  overflow: hidden;
+  height: 100%;
+  border: 1px solid var(--hairline);
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--surface) 86%, var(--paper));
+}
+
+.panel {
+  --spotlight-radius: 400px;
+  /* Existing panel classes own their geometry; artwork can extend past them. */
+  overflow: visible;
+}
+
+.heading {
+  --spotlight-radius: 150px;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--spotlight-edge) 30%, var(--hairline));
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--spotlight-color) 4%, var(--surface));
+}
+
+.surface.teal {
+  --spotlight-color: #58c8c5;
+  --spotlight-edge: #287f80;
+}
+
+:global([data-theme="dark"]) .surface {
+  --spotlight-edge: #efb456;
+}
+
+:global([data-theme="dark"]) .surface.teal {
+  --spotlight-edge: #75d9d4;
+}
+
+.surface::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  background: radial-gradient(
+    var(--spotlight-radius) circle at var(--spotlight-x, 50%)
+      var(--spotlight-y, 50%),
+    color-mix(in srgb, var(--spotlight-color) 24%, transparent),
+    transparent 76%
+  );
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 180ms ease;
+}
+
+.surface[data-spotlight="true"]::before,
+.surface:focus-within::before {
+  opacity: 1;
+}
+
+.surface:focus-within {
+  border-color: var(--spotlight-edge);
+  box-shadow: 0 0 0 1px
+    color-mix(in srgb, var(--spotlight-color) 24%, transparent);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .surface:hover {
+    transform: translateY(-2px);
+    border-color: color-mix(
+      in srgb,
+      var(--spotlight-edge) 80%,
+      var(--hairline)
+    );
+    box-shadow: 0 8px 24px -16px
+      color-mix(in srgb, var(--spotlight-color) 36%, transparent);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .surface,
+  .surface::before {
+    transition: none;
+  }
+
+  .surface:hover {
+    transform: none;
+  }
+
+  .surface::before {
+    background: color-mix(in srgb, var(--spotlight-color) 8%, transparent);
+  }
+}
+
+@media print {
+  .surface {
+    break-inside: avoid;
+    box-shadow: none;
+    background: transparent;
+  }
+
+  .surface::before {
+    display: none;
+  }
+}
