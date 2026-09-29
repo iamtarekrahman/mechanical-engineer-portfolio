@@ -1,5 +1,10 @@
 ﻿# Third-party notices
 
+Bundled fonts are documented in [src/fonts/README.md](src/fonts/README.md).
+Fraunces, Inter, IBM Plex Mono, and Newsreader use the SIL Open Font License 1.1;
+Special Elite uses the Apache License 2.0. Full license texts are included in
+[src/fonts/licenses](src/fonts/licenses/).
+
 This portfolio adapts the shader toggle and engraved-certificate geometry from
 ThreeUI Community by Meng To. Other ThreeUI references (the sketchbook, wireframe
 studies, and dotted buttons) informed original components built around the

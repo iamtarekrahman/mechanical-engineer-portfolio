@@ -19,7 +19,9 @@ npm start
 On Windows PowerShell, use `npm.cmd` if execution policy blocks `npm`.
 
 The app uses Next.js 14 App Router, React 18, TypeScript, and Tailwind CSS.
-Typography is self-hosted through `next/font`: Fraunces, Inter, and IBM Plex Mono.
+Typography uses bundled files in [`src/fonts`](src/fonts/README.md) through
+`next/font/local`: Fraunces, Inter, and IBM Plex Mono, plus Newsreader and Special
+Elite for V1. Builds do not need to download fonts from Google Fonts.
 
 ## Site versions
 

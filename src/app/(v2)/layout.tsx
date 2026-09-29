@@ -1,26 +1,13 @@
 import type { Metadata, Viewport } from "next";
-import { Fraunces, Inter, IBM_Plex_Mono } from "next/font/google";
+import localFont from "next/font/local";
+import { Fraunces as display, IBM_Plex_Mono as mono } from "@/fonts/shared";
 import "../globals.css";
 
-const display = Fraunces({
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
-  style: ["normal", "italic"],
-  variable: "--font-display",
-  display: "swap",
-});
-
-const body = Inter({
-  subsets: ["latin"],
-  weight: ["400", "500", "600"],
+const Inter = localFont({
+  src: "../../fonts/inter-latin-normal.woff2",
+  weight: "400 600",
+  style: "normal",
   variable: "--font-body",
-  display: "swap",
-});
-
-const mono = IBM_Plex_Mono({
-  subsets: ["latin"],
-  weight: ["400", "500", "600"],
-  variable: "--font-mono",
   display: "swap",
 });
 
@@ -94,7 +81,7 @@ export default function RootLayout({
     <html
       lang="en"
       suppressHydrationWarning
-      className={`${display.variable} ${body.variable} ${mono.variable}`}
+      className={`${display.variable} ${Inter.variable} ${mono.variable}`}
     >
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />

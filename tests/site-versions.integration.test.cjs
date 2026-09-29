@@ -19,21 +19,25 @@ async function page(route) {
   return response.text();
 }
 
-async function styles(html) {
+async function stylesheets(html, route = "/") {
   const hrefs = [
     ...html.matchAll(
       /<link\b(?=[^>]*\brel="stylesheet")[^>]*\bhref="([^"]+)"/g,
     ),
   ].map((match) => match[1].replaceAll("&amp;", "&"));
   assert.ok(hrefs.length, "The document should load its stylesheet");
-  const sheets = await Promise.all(
-    hrefs.map(async (href) => {
-      const response = await get(href);
+  return Promise.all(
+    [...new Set(hrefs)].map(async (href) => {
+      const response = await get(new URL(href, new URL(route, baseUrl)));
       assert.equal(response.status, 200, href);
-      return response.text();
+      return { url: response.url, css: await response.text() };
     }),
   );
-  return sheets.join("\n");
+}
+
+async function styles(html, route = "/") {
+  const sheets = await stylesheets(html, route);
+  return sheets.map(({ css }) => css).join("\n");
 }
 
 test(
@@ -62,13 +66,62 @@ test(
 
     const [currentStyles, archiveStyles] = await Promise.all([
       styles(current),
-      styles(archive),
+      styles(archive, "/v1"),
     ]);
     assert.match(currentStyles, /font-family:__Inter_/);
     assert.doesNotMatch(currentStyles, /font-family:__Newsreader_/);
     assert.match(archiveStyles, /font-family:__Newsreader_/);
     assert.match(archiveStyles, /font-family:__Special_Elite_/);
     assert.doesNotMatch(archiveStyles, /font-family:__Inter_/);
+  },
+);
+
+test(
+  "Both versions serve valid local WOFF2 fonts without Google font URLs",
+  options,
+  async () => {
+    const origin = new URL(baseUrl).origin;
+    const googleFonts = /fonts\.(?:googleapis|gstatic)\.com/i;
+    const fontUrls = new Set();
+
+    await Promise.all(
+      ["/", "/v1"].map(async (route) => {
+        const html = await page(route);
+        assert.doesNotMatch(html, googleFonts, route);
+        const sheets = await stylesheets(html, route);
+        let fileCount = 0;
+
+        for (const { url: sheetUrl, css } of sheets) {
+          assert.doesNotMatch(css, googleFonts, sheetUrl);
+          for (const [, face] of css.matchAll(/@font-face\s*\{([^}]*)\}/gi)) {
+            for (const [, sources] of face.matchAll(/\bsrc\s*:\s*([^;]+)/gi)) {
+              for (const source of sources.matchAll(
+                /url\(\s*(?:"([^"]+)"|'([^']+)'|([^\s)]+))\s*\)/gi,
+              )) {
+                const fontUrl = new URL(
+                  source[1] || source[2] || source[3],
+                  sheetUrl,
+                );
+                assert.equal(fontUrl.origin, origin, fontUrl.href);
+                fontUrls.add(fontUrl.href);
+                fileCount++;
+              }
+            }
+          }
+        }
+        assert.ok(fileCount > 0, `${route} should load font files`);
+      }),
+    );
+
+    await Promise.all(
+      [...fontUrls].map(async (url) => {
+        const response = await get(url);
+        assert.equal(response.status, 200, url);
+        assert.equal(new URL(response.url).origin, origin, response.url);
+        const bytes = Buffer.from(await response.arrayBuffer());
+        assert.equal(bytes.toString("ascii", 0, 4), "wOF2", url);
+      }),
+    );
   },
 );
 
