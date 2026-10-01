@@ -410,7 +410,7 @@ export const affiliations: { name: string; detail: string; membershipId?: string
   {
     name: "International Association of Engineers (IAENG)",
     detail: "Member",
-    membershipId: "To be announced",
+    membershipId: "583383",
   },
   {
     name: "Institution of Mechanical Engineers (IMechE)",
